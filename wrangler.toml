@@ -8,4 +8,4 @@ directory = "dist/"
 [[d1_databases]]
 binding = "DB"
 database_name = "gordon-tartan-db"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "e0e62aa5-5586-4370-b7d9-e960a8a31437"
