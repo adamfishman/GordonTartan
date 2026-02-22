@@ -1,0 +1,20 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SvgBg from '../components/SvgBg.astro';
+
+// A simple tartan for the 404 page
+const palette = 'K#101010 W#E0E0E0 G#005020';
+const threadcount = 'K/20 G4 W2 G4 K/20';
+---
+<Layout title="404" description="404 error - Page not found.">
+  <SvgBg threadcount={threadcount} palette={palette} />
+  <section class="etiquette section-page section-404">
+    <header>
+      <h1 class="title-font">
+        <span class="letter">404</span>
+        <span>Page not found</span>
+      </h1>
+    </header>
+    <p>We are sorry, but we can't find the page you were looking for.</p>
+  </section>
+</Layout>

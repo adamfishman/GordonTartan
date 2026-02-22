@@ -1,0 +1,19 @@
+---
+interface Props {
+  url: string;
+  class?: string;
+}
+
+const { url, class: className = '' } = Astro.props;
+---
+<a
+  class={className}
+  href={url}
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+    <path d="M8 7v5M8 4.5v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>
+</a>

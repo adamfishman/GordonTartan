@@ -1,0 +1,101 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import SvgBg from '../../../components/SvgBg.astro';
+import PaletteEl from '../../../components/PaletteEl.astro';
+import TartansNavigation from '../../../components/TartansNavigation.astro';
+import { getTartansByLetter, getLetterPageCount } from '../../../lib/db';
+
+const { letter, page } = Astro.params;
+const db = Astro.locals.runtime.env.DB;
+
+const validLetter = letter?.toLowerCase();
+if (!validLetter || !/^[a-z]$/.test(validLetter)) {
+  return Astro.redirect('/404');
+}
+
+const pageNum = page ? parseInt(page, 10) : 1;
+if (isNaN(pageNum) || pageNum < 1) {
+  return Astro.redirect('/404');
+}
+
+const pageSize = 60;
+const { tartans, total } = await getTartansByLetter(db, validLetter, pageNum, pageSize);
+const pageCount = Math.ceil(total / pageSize);
+
+if (pageNum > pageCount && pageCount > 0) {
+  return Astro.redirect('/404');
+}
+
+// Get previous letter's last page index for navigation
+const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
+const letterIndex = letters.indexOf(validLetter);
+let previousLetterLastIndex = 1;
+if (letterIndex > 0) {
+  previousLetterLastIndex = await getLetterPageCount(db, letters[letterIndex - 1], pageSize);
+}
+
+// Background tartan (use a simple green/black pattern)
+const bgPalette = 'G#005020 K#101010 W#E0E0E0';
+const bgThreadcount = 'G/20 K4 W2 K4 G/20';
+
+const index = pageNum - 1;
+const last = pageNum >= pageCount;
+---
+<Layout
+  title={`${validLetter.toUpperCase()} - page ${pageNum}`}
+  description={`All Tartans starting by letter ${validLetter.toUpperCase()} - page ${pageNum} / ${pageCount}`}
+>
+  <SvgBg class="tartans-bg" threadcount={bgThreadcount} palette={bgPalette} />
+  <TartansNavigation
+    class="nav-top"
+    letter={validLetter}
+    index={index}
+    last={last}
+    previousLetterLastIndex={previousLetterLastIndex}
+  />
+  <section class="etiquette section-all-tartans">
+    <header>
+      <h1>
+        <span class="title-font listing">A-Z Index</span>
+        <span class="title-font letter">{validLetter.toUpperCase()}</span>
+        <small>
+          {pageNum} / {pageCount}
+        </small>
+        {tartans.length > 0 && (
+          <span class="discrete">
+            <span class="ellipsis">{tartans[0].name}</span>-
+            <span class="ellipsis">{tartans[tartans.length - 1].name}</span>
+          </span>
+        )}
+      </h1>
+    </header>
+    <ul class="index">
+      {tartans.map((tartan) => (
+        <li class="index-el">
+          <a href={`/tartan/${tartan.slug}`}>
+            <span>{tartan.name}</span>
+            <PaletteEl colors={tartan.palette} id={tartan.slug} />
+          </a>
+        </li>
+      ))}
+      {tartans.length < 6 && (
+        <>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+        </>
+      )}
+    </ul>
+    {tartans.length > 30 && (
+      <TartansNavigation
+        class="hide-plus"
+        letter={validLetter}
+        index={index}
+        last={last}
+        previousLetterLastIndex={previousLetterLastIndex}
+      />
+    )}
+  </section>
+</Layout>

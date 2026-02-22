@@ -1,0 +1,22 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import TartanEditor from '../../../components/TartanEditor';
+import { getTartanBySlug } from '../../../lib/db';
+
+const { slug } = Astro.params;
+const db = Astro.locals.runtime.env.DB;
+
+const tartan = await getTartanBySlug(db, slug!);
+if (!tartan) {
+  return Astro.redirect('/404');
+}
+---
+<Layout title={`Edit: ${tartan.name}`} description={`Edit the ${tartan.name} tartan pattern.`}>
+  <TartanEditor
+    client:load
+    name={tartan.name}
+    palette={tartan.palette}
+    threadcount={tartan.threadcount}
+    parentSlug={tartan.slug}
+  />
+</Layout>

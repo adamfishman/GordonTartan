@@ -1,0 +1,12 @@
+---
+import { getRandomOfficialSlug } from '../lib/db';
+
+const db = Astro.locals.runtime.env.DB;
+const slug = await getRandomOfficialSlug(db);
+
+if (slug) {
+  return Astro.redirect(`/tartan/${slug}`, 302);
+}
+
+return Astro.redirect('/', 302);
+---

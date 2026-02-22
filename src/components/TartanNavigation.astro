@@ -1,0 +1,26 @@
+---
+import Info from './Info.astro';
+
+interface Props {
+  previous: { slug: string; name: string } | null;
+  next: { slug: string; name: string } | null;
+  originURL?: string;
+}
+
+const { previous, next, originURL } = Astro.props;
+---
+<nav class="nav">
+  {previous && (
+    <a class="prev" href={`/tartan/${previous.slug}`} rel="prev">
+      <span class="icon">&lsaquo;</span>
+      <span class="hide-m">{previous.name}</span>
+    </a>
+  )}
+  {next && (
+    <a class="next" href={`/tartan/${next.slug}`} rel="next">
+      <span class="hide-m">{next.name}</span>
+      <span class="icon">&rsaquo;</span>
+    </a>
+  )}
+  {originURL && <Info class="info-icon hide-plus" url={originURL} />}
+</nav>

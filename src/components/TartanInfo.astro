@@ -1,0 +1,20 @@
+---
+import Info from './Info.astro';
+import TartanNavigation from './TartanNavigation.astro';
+
+interface Props {
+  name: string;
+  originURL: string;
+  previous: { slug: string; name: string } | null;
+  next: { slug: string; name: string } | null;
+}
+
+const { name, originURL, previous, next } = Astro.props;
+---
+<div class="info">
+  <h1 class="title-font etiquette">
+    <span>{name}</span>
+    {originURL && <Info class="info-icon" url={originURL} />}
+  </h1>
+  <TartanNavigation previous={previous} next={next} originURL={originURL} />
+</div>

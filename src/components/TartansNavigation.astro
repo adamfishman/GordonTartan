@@ -1,0 +1,50 @@
+---
+interface Props {
+  class?: string;
+  letter: string;
+  index: number;
+  last: boolean;
+  previousLetterLastIndex: number;
+}
+
+const { class: className = '', letter, index, last, previousLetterLastIndex } = Astro.props;
+
+const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
+const letterIndex = letters.indexOf(letter);
+const previousLetter = letterIndex > 0 ? letters[letterIndex - 1] : null;
+const nextLetter = letterIndex < letters.length - 1 ? letters[letterIndex + 1] : null;
+
+let previousUrl: string | null = null;
+let nextUrl: string | null = null;
+
+if (index === 0 && previousLetter) {
+  const linkFragment = previousLetterLastIndex === 1 ? '' : `/${previousLetterLastIndex}`;
+  previousUrl = `/tartans/${previousLetter}${linkFragment}`;
+} else if (index === 1) {
+  previousUrl = `/tartans/${letter}`;
+} else if (index > 1) {
+  previousUrl = `/tartans/${letter}/${index}`;
+}
+
+if (last && nextLetter) {
+  nextUrl = `/tartans/${nextLetter}`;
+} else if (!last) {
+  nextUrl = `/tartans/${letter}/${(index + 2).toString()}`;
+}
+---
+<nav class={`nav ${className}`}>
+  <div class="previousLink">
+    {previousUrl && (
+      <a href={previousUrl} aria-label="Go to Previous Page">
+        <span class="icon">&lsaquo;</span>
+      </a>
+    )}
+  </div>
+  <div class="nextLink">
+    {nextUrl && (
+      <a href={nextUrl} aria-label="Go to Next Page">
+        <span class="icon">&rsaquo;</span>
+      </a>
+    )}
+  </div>
+</nav>

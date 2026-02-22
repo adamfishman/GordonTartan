@@ -1,0 +1,17 @@
+---
+import { buildSvgString, svgToDataUri } from '../lib/tartan';
+
+interface Props {
+  threadcount: string;
+  palette: string;
+  class?: string;
+}
+
+const { threadcount, palette, class: className = '' } = Astro.props;
+const { svg } = buildSvgString(threadcount, palette);
+const dataUri = svgToDataUri(svg);
+---
+<div
+  class={`bgtartan ${className}`}
+  style={`background-image: url("${dataUri}")`}
+></div>

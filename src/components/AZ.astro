@@ -1,0 +1,15 @@
+---
+const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
+---
+<a href="/">Home</a>
+<a href="/about">About</a>
+<a href="/random">Random</a>
+<ul class="az-list title-font">
+  {letters.map((letter) => (
+    <li>
+      <a href={`/tartans/${letter}`}>
+        {letter.toUpperCase()}
+      </a>
+    </li>
+  ))}
+</ul>

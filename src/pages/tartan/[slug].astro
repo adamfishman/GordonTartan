@@ -1,0 +1,36 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import SvgBg from '../../components/SvgBg.astro';
+import TartanInfo from '../../components/TartanInfo.astro';
+import SvgDownloadLink from '../../components/SvgDownloadLink.astro';
+import PngDownloadLink from '../../components/PngDownloadLink';
+import { getTartanBySlug, getAdjacentTartans } from '../../lib/db';
+import { buildSvgString } from '../../lib/tartan';
+
+const { slug } = Astro.params;
+const db = Astro.locals.runtime.env.DB;
+
+const tartan = await getTartanBySlug(db, slug!);
+if (!tartan) {
+  return Astro.redirect('/404');
+}
+
+const { previous, next } = await getAdjacentTartans(db, slug!);
+const { svg, size } = buildSvgString(tartan.threadcount, tartan.palette);
+const svgData = encodeURIComponent(svg);
+const description = `You can download here this beautiful seamless ${tartan.name} tartan pattern. It's available both as an SVG file or in a PNG format.`;
+---
+<Layout title={tartan.name} description={description}>
+  <SvgBg threadcount={tartan.threadcount} palette={tartan.palette} />
+  <TartanInfo
+    name={tartan.name}
+    previous={previous}
+    next={next}
+    originURL={tartan.origin_url}
+  />
+  <div class="downloads">
+    <SvgDownloadLink svgData={svgData} fileName={tartan.slug} />
+    <PngDownloadLink client:visible svgData={svgData} size={size} fileName={tartan.slug} />
+    <a class="edit-link" href={`/tartan/${tartan.slug}/edit`}>Edit</a>
+  </div>
+</Layout>

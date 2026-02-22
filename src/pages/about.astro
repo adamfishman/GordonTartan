@@ -1,0 +1,70 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SvgBg from '../components/SvgBg.astro';
+
+// Argentina tartan background (same as original)
+const palette = 'W#FFFFFF SB#A8ACE8 LB#82CFFD';
+const threadcount = 'LB/22 SB4 W4 SB4 LB22 W4 LB22 SB4 W4 SB4 LB/22';
+---
+<Layout title="About" description="All about the Gordon Tartan project.">
+  <SvgBg threadcount={threadcount} palette={palette} />
+  <section class="etiquette section-page section-about">
+    <header>
+      <h1 class="title-font">
+        <span class="letter">About</span>
+      </h1>
+    </header>
+    <p>
+      According to{" "}
+      <a
+        class="underlined-link"
+        href="https://en.wikipedia.org/wiki/Tartan"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Wikipedia,
+      </a>{" "}
+      tartan is a pattern consisting of crisscrossed horizontal and vertical
+      bands in multiple colors. Tartans are particularly associated with
+      Scotland since Scottish kilts almost always use them as patterns.
+    </p>
+    <p>
+      This site is based on{" "}
+      <a class="underlined-link" href="https://tartanify.com" target="_blank" rel="noopener noreferrer">tartanify.com</a>,
+      originally created by PeHaa and Joe Vains. The tartan data comes from{" "}
+      <a
+        class="underlined-link"
+        href="https://www.tartanregister.gov.uk/index"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        the Scottish Register of Tartans.
+      </a>
+    </p>
+    <section>
+      <h2 class="title-font">Technical details</h2>
+      <p>
+        Gordon Tartan is built with{" "}
+        <a
+          class="underlined-link"
+          href="https://astro.build"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Astro
+        </a>{" "}
+        and deployed on Cloudflare Workers with D1 for storage.
+        It uses a CSV file for the original tartan data. The CSV file contains the name
+        of each pattern, its color palette, its "threadcount" and the link
+        to its page in the official register.
+      </p>
+    </section>
+    <section>
+      <h2 class="title-font">Original Creators</h2>
+      <p>
+        The original tartanify.com was created by PeHaa (Paulina Hetman) and Joe Vains (Sylvain Guizard),
+        a Polish/French couple living in Paris who share a passion for web design.
+      </p>
+    </section>
+  </section>
+</Layout>

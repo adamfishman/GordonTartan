@@ -1,0 +1,19 @@
+---
+interface Props {
+  svgData: string;
+  fileName: string;
+}
+
+const { svgData, fileName } = Astro.props;
+---
+<a
+  download={`${fileName}.svg`}
+  href-lang="image/svg+xml"
+  href={`data:image/svg+xml;utf8,${svgData}`}
+>
+  <span class="icon">&rsaquo;</span>{" "}
+  <span class="download-text">
+    <span class="hide-sm">Download as </span>SVG
+  </span>
+  <small class="hide-sm">Vector format</small>
+</a>

@@ -1,0 +1,56 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SvgBg from '../components/SvgBg.astro';
+
+// Lebrun tartan background
+const palette = 'R#C80000 G#006818 B#2C2C80 Y#E8C000 K#101010 W#E0E0E0';
+const threadcount = 'R/4 K2 Y2 K2 G24 B24 G24 K2 Y2 K2 R/4';
+---
+<Layout title="Terms of Use" description="Copyright and Restrictions.">
+  <SvgBg threadcount={threadcount} palette={palette} />
+  <section class="etiquette section-page">
+    <header>
+      <h1 class="title-font">
+        <span class="letter">Terms of Use</span>
+      </h1>
+    </header>
+    <p>
+      On this site you will find SVG and PNG pattern tiles generated
+      from their "threadcount" and color parameters. The data we used comes
+      from{" "}
+      <a
+        class="underlined-link"
+        href="https://www.tartanregister.gov.uk/index"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="the Scottish Register of Tartans - opens in a new window"
+      >
+        the Scottish Register of Tartans.
+      </a>
+    </p>
+    <p>
+      Some of the older tartans are now in the public domain, which means
+      that they are not protected by intellectual property laws such as
+      copyright.
+    </p>
+    <p>
+      Still, you should keep in mind that many others have legally-binding
+      copyright restrictions on weaving or other usages due to commercial or
+      other interests.
+    </p>
+    <p>
+      That's why, for each pattern, we provide a link to its page in{" "}
+      <a
+        class="underlined-link"
+        href="https://www.tartanregister.gov.uk/index"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="the Scottish Register of Tartans - opens in a new window"
+      >
+        the Scottish Register of Tartans.
+      </a>{" "}
+      Following that link, you will find some details concerning each
+      tartan, in particular, the possible restrictions of use.
+    </p>
+  </section>
+</Layout>

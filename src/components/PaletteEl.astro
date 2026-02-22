@@ -1,0 +1,19 @@
+---
+import { sortPaletteColors } from '../lib/tartan';
+
+interface Props {
+  colors: string;
+  id: string | number;
+}
+
+const { colors } = Astro.props;
+const colorsArray = sortPaletteColors(colors);
+---
+<ul class="colors">
+  {colorsArray.map((color) => (
+    <li
+      class="color"
+      style={`background: ${color}`}
+    ></li>
+  ))}
+</ul>

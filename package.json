@@ -1,43 +1,30 @@
 {
-  "name": "tartanify.com",
+  "name": "gordon-tartan",
+  "type": "module",
+  "version": "1.0.0",
   "private": true,
-  "description": "Tartans from csv file with gatsby",
-  "version": "1.2.0",
-  "license": "MIT",
   "scripts": {
-    "build": "gatsby build",
-    "develop": "gatsby develop",
-    "format": "prettier --write \"**/*.{js,jsx,json,md}\"",
-    "start": "npm run develop",
-    "dev": "gatsby clean && gatsby develop",
-    "serve": "gatsby serve",
-    "test": "echo \"Write tests! -> https://gatsby.dev/unit-testing \""
+    "dev": "wrangler dev",
+    "build": "node scripts/build-search-index.js && astro build",
+    "seed": "node scripts/seed-d1.js",
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
-    "@fontsource/alfa-slab-one": "^4.4.5",
-    "@fontsource/barlow": "^4.4.5",
-    "gatsby": "^3.7.2",
-    "gatsby-plugin-favicon": "^3.1.6",
-    "gatsby-plugin-google-analytics": "^3.7.1",
-    "gatsby-plugin-react-helmet": "^4.7.1",
-    "gatsby-plugin-transition-link": "^1.20.5",
-    "gatsby-source-filesystem": "^3.7.1",
-    "gatsby-transformer-csv": "^3.7.1",
-    "graphql-type-json": "^0.3.2",
-    "gsap": "^3.7.0",
+    "@astrojs/check": "^0.9.6",
+    "@astrojs/cloudflare": "^12.2.0",
+    "@astrojs/react": "^4.2.0",
+    "@fontsource/alfa-slab-one": "^5.0.0",
+    "@fontsource/barlow": "^5.0.0",
+    "astro": "^5.2.0",
     "lunr": "^2.3.9",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "react-helmet": "^6.1.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "prettier": "^2.3.1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/gatsbyjs/gatsby-starter-hello-world"
-  },
-  "bugs": {
-    "url": "https://github.com/gatsbyjs/gatsby/issues"
+    "@types/lunr": "^2.3.7",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "wrangler": "^3.0.0"
   }
 }
