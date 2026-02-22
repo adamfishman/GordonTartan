@@ -1,6 +1,6 @@
 # GordonTartan
 
-A fork of [Tartanify.com](https://tartanify.com) — a collection of over 5,000 tartan patterns available to browse, explore, and download.
+A fork of [Tartanify.com](https://tartanify.com) — a collection of over 5,000 tartan patterns available to browse, explore, download, and customise.
 
 ## Acknowledgements
 
@@ -12,19 +12,66 @@ This project is based on the original work of **[PeHaa](https://pehaa.com)** (Pa
 ## Current Functionality
 
 - **Browse 5,000+ tartans** — explore the full collection via an A–Z alphabetical index
-- **Individual tartan pages** — each tartan has a dedicated page showing its pattern, color palette, and threadcount, with a link to its official entry in the Scottish Register of Tartans
+- **Individual tartan pages** — each tartan has a dedicated page showing its pattern, colour palette, and threadcount, with a link to its official entry in the Scottish Register of Tartans
 - **SVG download** — download any tartan as a seamless, repeating SVG tile
 - **PNG download** — download any tartan as a PNG image
-- **Search** — find tartans by name using the built-in search widget
+- **Search** — find tartans by name using the built-in search widget (fuzzy + wildcard matching via Lunr.js)
 - **Previous / next navigation** — step through the collection from any individual tartan page
+- **Random tartan** — jump to a randomly selected official tartan
+- **Tartan editor** — create and save custom tartan variants with a live SVG preview
 
 ## Tech Stack
 
-Built with [Gatsby.js](https://gatsbyjs.org). Tartan pattern data is stored in a CSV file and transformed at build time. Patterns are rendered programmatically as SVG.
+| Layer | Technology |
+|---|---|
+| Framework | [Astro](https://astro.build) v5 (SSR mode) |
+| Interactive components | React 19 |
+| Hosting | Cloudflare Workers + Pages |
+| Database | Cloudflare D1 (SQLite) |
+| Search index | Lunr.js (pre-built at build time) |
+| Language | TypeScript (strict) |
+
+Tartan patterns are generated programmatically as SVG from palette and threadcount data stored in a Cloudflare D1 database, seeded from the original CSV supplied by the Scottish Register of Tartans.
 
 ## Getting Started
 
+### Prerequisites
+
+- [Node.js](https://nodejs.org) (v18+)
+- A [Cloudflare account](https://cloudflare.com) with Wrangler authenticated (`npx wrangler login`)
+
+### Install dependencies
+
 ```bash
-yarn install
-yarn dev
+npm install
+```
+
+### Seed the local database
+
+```bash
+npm run seed
+```
+
+### Run the development server
+
+```bash
+npm run dev
+```
+
+### Run tests
+
+```bash
+npm test
+```
+
+### Build for production
+
+```bash
+npm run build
+```
+
+### Deploy to Cloudflare
+
+```bash
+npm run deploy
 ```
