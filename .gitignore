@@ -39,5 +39,3 @@ Thumbs.db
 # TypeScript
 *.tsbuildinfo
 
-# Package lock
-package-lock.json
