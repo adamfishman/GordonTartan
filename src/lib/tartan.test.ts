@@ -48,6 +48,14 @@ describe('slugify', () => {
   it('handles names with numbers', () => {
     expect(slugify('Abel (2015)')).toBe('abel-2015')
   })
+
+  it('returns an empty string for empty input', () => {
+    expect(slugify('')).toBe('')
+  })
+
+  it('returns an empty string for whitespace-only input', () => {
+    expect(slugify('   ')).toBe('')
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -87,6 +95,23 @@ describe('hexToHue', () => {
     expect(hue).toBeGreaterThanOrEqual(0)
     expect(hue).toBeLessThan(360)
   })
+
+  it('accepts lowercase hex letters', () => {
+    expect(hexToHue('#ff0000')).toBe(0)
+    expect(hexToHue('#00ff00')).toBe(120)
+  })
+
+  it('returns 60 for yellow (#FFFF00)', () => {
+    expect(hexToHue('#FFFF00')).toBe(60)
+  })
+
+  it('returns 180 for cyan (#00FFFF)', () => {
+    expect(hexToHue('#00FFFF')).toBe(180)
+  })
+
+  it('returns 300 for magenta (#FF00FF)', () => {
+    expect(hexToHue('#FF00FF')).toBe(300)
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -112,6 +137,13 @@ describe('sortPaletteColors', () => {
 
   it('handles a single color', () => {
     expect(sortPaletteColors('R#FF0000')).toEqual(['#FF0000'])
+  })
+
+  it('returns both colors when two have the same hue (black and white both = 0)', () => {
+    const result = sortPaletteColors('K#000000 W#FFFFFF')
+    expect(result).toHaveLength(2)
+    expect(result).toContain('#000000')
+    expect(result).toContain('#FFFFFF')
   })
 })
 
@@ -170,6 +202,20 @@ describe('countPattern', () => {
     expect(result[0].size).toBe(32) // 4*8
     expect(result[1].size).toBe(12) // 4*3
   })
+
+  it('handles a single-entry pattern with an even total', () => {
+    const result = countPattern('R10', 'R#FF0000')
+    expect(result).toEqual([{ fill: '#FF0000', size: 40 }])
+  })
+
+  it('does not treat a non-first pivot marker as symmetric', () => {
+    // Only a leading pivot (e.g. 'R/10 ...') triggers symmetric mode.
+    // A trailing pivot like 'K/4' is parsed normally and does not mirror.
+    const result = countPattern('R10 K/4', 'R#FF0000 K#101010')
+    expect(result).toHaveLength(2)
+    expect(result[0]).toEqual({ fill: '#FF0000', size: 40 })
+    expect(result[1]).toEqual({ fill: '#101010', size: 16 })
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -211,6 +257,13 @@ describe('buildSvgString', () => {
     const result = buildSvgString('R10 G10', palette)
     expect(result.svg).toContain('#FF0000')
     expect(result.svg).toContain('#00FF00')
+  })
+
+  it('handles a single-color pattern', () => {
+    const result = buildSvgString('R10', 'R#FF0000')
+    expect(result.size).toBe(40)
+    expect(result.svg).toContain('viewBox="0 0 40 40"')
+    expect(result.svg).toContain('#FF0000')
   })
 })
 
