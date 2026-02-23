@@ -6,7 +6,7 @@ import SvgBg from '../components/SvgBg.astro';
 const palette = 'W#FFFFFF SB#A8ACE8 LB#82CFFD';
 const threadcount = 'LB/22 SB4 W4 SB4 LB22 W4 LB22 SB4 W4 SB4 LB/22';
 ---
-<Layout title="About" description="All about the Gordon Tartan project.">
+<Layout title="About" description="All about the Gordon Tartan project." tartanThreadcount={threadcount} tartanPalette={palette}>
   <SvgBg threadcount={threadcount} palette={palette} />
   <section class="etiquette section-page section-about">
     <header>

@@ -271,9 +271,23 @@ main {
   outline-offset: -10px;
 }
 
-.downloads {
+.tartan-actions {
   position: absolute;
   bottom: 10rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.edit-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.downloads {
   width: 100%;
   justify-content: center;
   color: var(--white);
@@ -345,6 +359,10 @@ footer {
   margin: 1rem 0 0;
   line-height: 1;
 }
+.logo-link h2.tartan-fill {
+  color: var(--title-fill, var(--accent));
+  -webkit-text-stroke: 2px var(--title-border);
+}
 
 @media screen and (min-width: 600px) {
   footer {
@@ -356,7 +374,7 @@ footer {
   .logo-link h2 {
     font-size: 2.25rem;
   }
-  .downloads {
+  .tartan-actions {
     bottom: 7.5rem;
   }
   .sidebar {
@@ -774,17 +792,20 @@ footer {
 }
 .edit-link {
   display: inline-block;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.75rem;
   border-radius: 32px;
-  border: solid 1px var(--accent);
-  background-color: transparent;
-  color: var(--accent);
-  margin: 0.5rem;
+  border: solid 2px var(--accent);
+  background-color: var(--accent);
+  color: var(--primary-dark);
+  margin: 0;
   transition: 0.3s;
-  font-size: 0.875rem;
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
 }
 .edit-link:hover {
-  background-color: rgba(232, 192, 0, 0.15);
+  background-color: color-mix(in srgb, var(--accent) 85%, white);
+  border-color: color-mix(in srgb, var(--accent) 85%, white);
 }
 
 /* Glossary */

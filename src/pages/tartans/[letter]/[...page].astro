@@ -44,6 +44,8 @@ const last = pageNum >= pageCount;
 <Layout
   title={`${validLetter.toUpperCase()} - page ${pageNum}`}
   description={`All Tartans starting by letter ${validLetter.toUpperCase()} - page ${pageNum} / ${pageCount}`}
+  tartanThreadcount={bgThreadcount}
+  tartanPalette={bgPalette}
 >
   <SvgBg class="tartans-bg" threadcount={bgThreadcount} palette={bgPalette} />
   <TartansNavigation

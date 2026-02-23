@@ -20,7 +20,7 @@ const { svg, size } = buildSvgString(tartan.threadcount, tartan.palette);
 const svgData = encodeURIComponent(svg);
 const description = `You can download here this beautiful seamless ${tartan.name} tartan pattern. It's available both as an SVG file or in a PNG format.`;
 ---
-<Layout title={tartan.name} description={description}>
+<Layout title={tartan.name} description={description} tartanThreadcount={tartan.threadcount} tartanPalette={tartan.palette}>
   <SvgBg threadcount={tartan.threadcount} palette={tartan.palette} />
   <TartanInfo
     name={tartan.name}
@@ -28,9 +28,13 @@ const description = `You can download here this beautiful seamless ${tartan.name
     next={next}
     originURL={tartan.origin_url}
   />
-  <div class="downloads">
-    <SvgDownloadLink svgData={svgData} fileName={tartan.slug} />
-    <PngDownloadLink client:visible svgData={svgData} size={size} fileName={tartan.slug} />
-    <a class="edit-link" href={`/tartan/${tartan.slug}/edit`}>Edit</a>
+  <div class="tartan-actions">
+    <div class="edit-row">
+      <a class="edit-link" href={`/tartan/${tartan.slug}/edit`}>Edit</a>
+    </div>
+    <div class="downloads">
+      <SvgDownloadLink svgData={svgData} fileName={tartan.slug} />
+      <PngDownloadLink client:visible svgData={svgData} size={size} fileName={tartan.slug} />
+    </div>
   </div>
 </Layout>

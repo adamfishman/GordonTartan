@@ -4,6 +4,8 @@ import {
   countPattern,
   hexToHue,
   sortPaletteColors,
+  getColorPercentages,
+  getTitleColors,
   buildSvgString,
   svgToDataUri,
 } from './tartan'
@@ -215,6 +217,86 @@ describe('countPattern', () => {
     expect(result).toHaveLength(2)
     expect(result[0]).toEqual({ fill: '#FF0000', size: 40 })
     expect(result[1]).toEqual({ fill: '#101010', size: 16 })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getColorPercentages
+// ---------------------------------------------------------------------------
+describe('getColorPercentages', () => {
+  const palette = 'R#FF0000 G#00FF00 B#0000FF K#101010'
+
+  it('returns each color with its percentage of total thread size, sorted most to least common', () => {
+    // R10 G10: only R and G, equal size (40 each), total 80 → 50% each
+    const result = getColorPercentages('R10 G10', 'R#FF0000 G#00FF00')
+    expect(result).toHaveLength(2)
+    expect(result[0]).toEqual({ color: '#FF0000', percentage: 50 })
+    expect(result[1]).toEqual({ color: '#00FF00', percentage: 50 })
+  })
+
+  it('computes percentages from stripe sizes (unequal)', () => {
+    // R10 K2: R size 40, K size 8, total 48 → R 40/48, K 8/48
+    const result = getColorPercentages('R10 K2', 'R#FF0000 K#101010')
+    expect(result).toHaveLength(2)
+    expect(result[0].color).toBe('#FF0000')
+    expect(result[0].percentage).toBeCloseTo((40 / 48) * 100, 5)
+    expect(result[1].color).toBe('#101010')
+    expect(result[1].percentage).toBeCloseTo((8 / 48) * 100, 5)
+  })
+
+  it('percentages sum to 100', () => {
+    const result = getColorPercentages('R4 G6 B2 K8', palette)
+    const sum = result.reduce((acc, { percentage }) => acc + percentage, 0)
+    expect(sum).toBeCloseTo(100, 5)
+  })
+
+  it('handles symmetric threadcount (mirrored pattern)', () => {
+    // R/10 K2 W4: four entries, K and W appear twice in the sequence
+    const result = getColorPercentages('R/10 K2 W4', palette)
+    expect(result.length).toBeGreaterThanOrEqual(2)
+    expect(result[0].percentage).toBeGreaterThanOrEqual(result[result.length - 1].percentage)
+  })
+
+  it('handles a single-color pattern', () => {
+    const result = getColorPercentages('R10', 'R#FF0000')
+    expect(result).toEqual([{ color: '#FF0000', percentage: 100 }])
+  })
+
+  it('returns empty array when pattern yields no total size', () => {
+    const result = getColorPercentages('', 'R#FF0000')
+    expect(result).toEqual([])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getTitleColors
+// ---------------------------------------------------------------------------
+describe('getTitleColors', () => {
+  it('returns fill = second most common, border = least common when three or more colors', () => {
+    // R10 G6 K4: R most, G second, K least
+    const result = getTitleColors('R10 G6 K4', 'R#FF0000 G#00FF00 K#101010')
+    expect(result).not.toBeNull()
+    expect(result!.fill).toBe('#00FF00') // second most common
+    expect(result!.border).toBe('#101010') // least common
+  })
+
+  it('returns fill = most common, border = least common when only two colors', () => {
+    const result = getTitleColors('R10 K2', 'R#FF0000 K#101010')
+    expect(result).not.toBeNull()
+    expect(result!.fill).toBe('#FF0000') // most common
+    expect(result!.border).toBe('#101010') // least common
+  })
+
+  it('returns same color for fill and border when only one color', () => {
+    const result = getTitleColors('R10', 'R#FF0000')
+    expect(result).not.toBeNull()
+    expect(result!.fill).toBe('#FF0000')
+    expect(result!.border).toBe('#FF0000')
+  })
+
+  it('returns null when pattern yields no colors', () => {
+    const result = getTitleColors('', 'R#FF0000')
+    expect(result).toBeNull()
   })
 })
 

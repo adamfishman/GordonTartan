@@ -104,6 +104,71 @@ export function sortPaletteColors(palette: string): string[] {
     .sort((a, b) => hexToHue(a) - hexToHue(b));
 }
 
+/** Color with its share of the pattern (0–100). Sorted by percentage descending (most common first). */
+export interface ColorPercentage {
+  color: string;
+  percentage: number;
+}
+
+/**
+ * Returns each color's percentage of the tartan pattern (by thread size).
+ * Sorted by percentage descending (most common first).
+ */
+export function getColorPercentages(threadcount: string, palette: string): ColorPercentage[] {
+  const entries = countPattern(threadcount, palette);
+  const total = entries.reduce((sum, e) => sum + e.size, 0);
+  if (total === 0) return [];
+
+  const byColor = new Map<string, number>();
+  for (const { fill, size } of entries) {
+    byColor.set(fill, (byColor.get(fill) ?? 0) + size);
+  }
+
+  return Array.from(byColor.entries())
+    .map(([color, size]) => ({ color, percentage: (size / total) * 100 }))
+    .sort((a, b) => b.percentage - a.percentage);
+}
+
+/**
+ * Returns fill and border colors for the site title based on the tartan:
+ * - Border = least common color (2px).
+ * - Fill = second most common color; if only two colors, fill = most common.
+ */
+export function getTitleColors(threadcount: string, palette: string): { fill: string; border: string } | null {
+  const colors = getColorPercentages(threadcount, palette);
+  if (colors.length === 0) return null;
+  const fillColor = colors.length === 2 ? colors[0].color : colors.length >= 2 ? colors[1].color : colors[0].color;
+  const borderColor = colors[colors.length - 1].color;
+  return { fill: fillColor, border: borderColor };
+}
+
+/** Returns the hex color with highest relative luminance from a palette string (e.g. "W#E0E0E0 K#101010"). */
+export function getLightestColorFromPalette(palette: string): string {
+  const hexes = palette.split(' ').map((el) => {
+    const part = el.split('#')[1];
+    if (!part) return null;
+    const hex = part.length === 6 ? part : part.length === 3 ? part.split('').map(c => c + c).join('') : null;
+    return hex ? `#${hex}` : null;
+  }).filter((h): h is string => h !== null);
+
+  if (hexes.length === 0) return '#ffffff';
+
+  let lightest = hexes[0];
+  let maxLum = 0;
+
+  for (const hex of hexes) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+    if (lum > maxLum) {
+      maxLum = lum;
+      lightest = hex;
+    }
+  }
+  return lightest;
+}
+
 export interface SvgResult {
   svg: string;
   size: number;
