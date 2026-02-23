@@ -6,7 +6,7 @@ import SvgBg from '../components/SvgBg.astro';
 const palette = 'W#E0E0E0 K#101010 G#005020 Y#E8C000 R#C80000 B#003C64';
 const threadcount = 'G/36 K2 G4 K16 B16 K2 B2 K2 B16 W4 Y/4';
 ---
-<Layout title="5k+ Tartan Patterns" description="Browse over 5000 official tartans from the Scottish Register, or create your own. Download seamless tiles in SVG and PNG format.">
+<Layout title="5k+ Tartan Patterns" description="Browse over 5000 official tartans from the Scottish Register, or create your own. Download seamless tiles in SVG and PNG format." tartanThreadcount={threadcount} tartanPalette={palette}>
   <SvgBg threadcount={threadcount} palette={palette} />
   <section class="etiquette section-page section-home">
     <header>

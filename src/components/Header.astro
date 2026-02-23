@@ -1,5 +1,16 @@
 ---
+interface Props {
+  titleFill?: string;
+  titleBorder?: string;
+}
+const { titleFill, titleBorder } = Astro.props;
+const titleStyle =
+  titleFill && titleBorder
+    ? `--title-fill: ${titleFill}; --title-border: ${titleBorder};`
+    : undefined;
 ---
 <a class="logo-link" href="/">
-  <h2>Gordon Tartan</h2>
+  <h2 class={`title-font ${titleFill && titleBorder ? 'tartan-fill' : ''}`} style={titleStyle}>
+    Gordon Tartan
+  </h2>
 </a>
