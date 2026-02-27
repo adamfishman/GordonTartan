@@ -38,6 +38,15 @@ export const POST: APIRoute = async ({ request, locals }) => {
     suffix++;
   }
 
+  let parentId: number | null = null;
+  if (parent_slug) {
+    const parent = await getTartanBySlug(db, parent_slug);
+    if (!parent) {
+      return new Response(JSON.stringify({ error: 'Parent tartan not found' }), { status: 400 });
+    }
+    parentId = parent.id;
+  }
+
   try {
     const tartan = await createTartan(db, {
       name,
@@ -46,6 +55,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       threadcount,
       slug,
       parent_slug,
+      parent_id: parentId,
     });
 
     return new Response(JSON.stringify(tartan), {

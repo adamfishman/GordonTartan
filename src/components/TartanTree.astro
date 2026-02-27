@@ -1,0 +1,26 @@
+---
+const { nodes, descendantMap } = Astro.props;
+---
+
+<ul class="tartan-tree">
+  {nodes.map((node) => {
+    const children = descendantMap.get(node.id) || [];
+    if (children.length > 0) {
+      return (
+        <li>
+          <details>
+            <summary>
+              <a class="underlined-link" href={`/tartan/${node.slug}`}>{node.name}</a>
+            </summary>
+            <Astro.self nodes={children} descendantMap={descendantMap} />
+          </details>
+        </li>
+      );
+    }
+    return (
+      <li>
+        <a class="underlined-link" href={`/tartan/${node.slug}`}>{node.name}</a>
+      </li>
+    );
+  })}
+</ul>

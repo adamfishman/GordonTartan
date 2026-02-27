@@ -1,11 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef, type ChangeEvent } from 'react';
-
-interface Props {
-  name: string;
-  palette: string;
-  threadcount: string;
-  parentSlug: string;
-}
+import { officialColors } from '../data/official-colors';
 
 interface ThreadEntry {
   fill: string;
@@ -89,12 +83,12 @@ function TartanSvgPreview({ threadcount, palette }: { threadcount: string; palet
       style={{ maxWidth: '100%' }}
     >
       <defs>
-        <pattern id="ed-pattern" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+        <pattern id="cr-pattern" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
           <polygon points="0,4 0,8 8,0 4,0" fill="#ffffff" />
           <polygon points="4,8 8,8 8,4" fill="#ffffff" />
         </pattern>
-        <mask id="ed-grating" x="0" y="0" width="1" height="1">
-          <rect x="0" y="0" width="100%" height="100%" fill="url(#ed-pattern)" />
+        <mask id="cr-grating" x="0" y="0" width="1" height="1">
+          <rect x="0" y="0" width="100%" height="100%" fill="url(#cr-pattern)" />
         </mask>
       </defs>
       <g>
@@ -109,7 +103,7 @@ function TartanSvgPreview({ threadcount, palette }: { threadcount: string; palet
           />
         ))}
       </g>
-      <g mask="url(#ed-grating)">
+      <g mask="url(#cr-grating)">
         {tartanCount.map((el, index) => (
           <rect
             key={`v-${index}`}
@@ -151,7 +145,6 @@ function PaletteEditor({ palette, setPalette }: { palette: string; setPalette: (
   const colorInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const lastSerializedRef = useRef(palette);
 
-  // Sync from external palette changes (e.g. raw text editing)
   useEffect(() => {
     if (palette !== lastSerializedRef.current) {
       setEntries(parsePalette(palette));
@@ -241,15 +234,53 @@ function PaletteEditor({ palette, setPalette }: { palette: string; setPalette: (
   );
 }
 
-// Map a character code to a tartan-friendly thread count (2–60).
-// Uses a hash to spread values so similar letters get very different widths,
-// producing a mix of thin pinstripes, medium accents, and wide ground stripes.
-function charToThreadCount(charCode: number): number {
-  const raw = ((charCode * 17) % 59) + 2; // 2–60, well-distributed
-  return raw - (raw % 2); // round to even (traditional tartan convention)
+interface ThreadcountSegment {
+  code: string;
+  pivot: boolean;
+  size: number;
 }
 
-function generateThreadcount(
+const THREADCOUNT_TOKEN = /([a-zA-Z]+|\([^)]*\))(\/?)(\d+)/g;
+
+function parseThreadcount(threadcount: string): ThreadcountSegment[] {
+  const tokens = threadcount.trim().split(/\s+/).filter(Boolean);
+  const result: ThreadcountSegment[] = [];
+  for (const token of tokens) {
+    THREADCOUNT_TOKEN.lastIndex = 0;
+    const m = THREADCOUNT_TOKEN.exec(token);
+    if (m) {
+      result.push({
+        code: m[1],
+        pivot: m[2] === '/',
+        size: Math.max(1, Math.floor(Number(m[3]) || 1)),
+      });
+    }
+  }
+  if (result.length === 0) return result;
+  const hasPivot = result.some((entry) => entry.pivot);
+  if (hasPivot) {
+    return result.map((entry, index) => ({ ...entry, pivot: index === 0 }));
+  }
+  return result;
+}
+
+function serializeThreadcount(segments: ThreadcountSegment[]): string {
+  return segments
+    .map((s) => {
+      const code = s.code.trim();
+      const pivot = s.pivot ? '/' : '';
+      const size = Math.max(1, Math.floor(s.size));
+      return `${code}${pivot}${size}`;
+    })
+    .join(' ');
+}
+
+function charToThreadCount(charCode: number): number {
+  const raw = ((charCode * 17) % 59) + 2;
+  return raw - (raw % 2);
+}
+
+function generateTextThreadcount(
   text: string,
   palette: PaletteEntry[],
   colorMode: 'cycle' | 'derived',
@@ -304,7 +335,7 @@ function TextToThreadcount({ palette, setThreadcount }: { palette: string; setTh
   }, []);
 
   const handleGenerate = useCallback(() => {
-    const tc = generateThreadcount(text, paletteEntries, colorMode, symmetric, separators);
+    const tc = generateTextThreadcount(text, paletteEntries, colorMode, symmetric, separators);
     if (tc) setThreadcount(tc);
   }, [text, paletteEntries, colorMode, symmetric, separators, setThreadcount]);
 
@@ -356,52 +387,11 @@ function TextToThreadcount({ palette, setThreadcount }: { palette: string; setTh
           onClick={handleGenerate}
           disabled={!canGenerate}
         >
-          Generate Threadcount
+          Generate from Text
         </button>
       </div>
     </details>
   );
-}
-
-interface ThreadcountSegment {
-  code: string;
-  pivot: boolean;
-  size: number;
-}
-
-const THREADCOUNT_TOKEN = /([a-zA-Z]+|\([^)]*\))(\/?)(\d+)/g;
-
-function parseThreadcount(threadcount: string): ThreadcountSegment[] {
-  const tokens = threadcount.trim().split(/\s+/).filter(Boolean);
-  const result: ThreadcountSegment[] = [];
-  for (const token of tokens) {
-    THREADCOUNT_TOKEN.lastIndex = 0;
-    const m = THREADCOUNT_TOKEN.exec(token);
-    if (m) {
-      result.push({
-        code: m[1],
-        pivot: m[2] === '/',
-        size: Math.max(1, Math.floor(Number(m[3]) || 1)),
-      });
-    }
-  }
-  if (result.length === 0) return result;
-  const hasPivot = result.some((entry) => entry.pivot);
-  if (hasPivot) {
-    return result.map((entry, index) => ({ ...entry, pivot: index === 0 }));
-  }
-  return result;
-}
-
-function serializeThreadcount(segments: ThreadcountSegment[]): string {
-  return segments
-    .map((s) => {
-      const code = s.code.trim();
-      const pivot = s.pivot ? '/' : '';
-      const size = Math.max(1, Math.floor(s.size));
-      return `${code}${pivot}${size}`;
-    })
-    .join(' ');
 }
 
 function ThreadcountEditor({ threadcount, setThreadcount, paletteCodes }: { threadcount: string; setThreadcount: (v: string) => void; paletteCodes: string[] }) {
@@ -436,12 +426,6 @@ function ThreadcountEditor({ threadcount, setThreadcount, paletteCodes }: { thre
     updateEntries(next);
   }, [entries, updateEntries]);
 
-  const handleSymmetricChange = useCallback((symmetric: boolean) => {
-    if (entries.length === 0) return;
-    const next = entries.map((entry, index) => ({ ...entry, pivot: symmetric && index === 0 }));
-    updateEntries(next);
-  }, [entries, updateEntries]);
-
   const handleSizeChange = useCallback((index: number, size: number) => {
     const next = [...entries];
     next[index] = { ...next[index], size: Math.max(1, Math.floor(size)) };
@@ -459,15 +443,21 @@ function ThreadcountEditor({ threadcount, setThreadcount, paletteCodes }: { thre
     updateEntries(next);
   }, [entries, paletteCodes, updateEntries]);
 
+  const handleSymmetricChange = useCallback((symmetric: boolean) => {
+    if (entries.length === 0) return;
+    const next = entries.map((entry, index) => ({ ...entry, pivot: symmetric && index === 0 }));
+    updateEntries(next);
+  }, [entries, updateEntries]);
+
   return (
     <div>
       <label className="threadcount-symmetric-toggle">
+        Symmetric pattern
         <input
           type="checkbox"
           checked={isSymmetric}
           onChange={(e) => handleSymmetricChange(e.target.checked)}
         />
-        Symmetric pattern
       </label>
       <div className="threadcount-editor">
         {entries.map((entry, i) => (
@@ -619,17 +609,84 @@ function Glossary() {
   );
 }
 
-export default function TartanEditor({ name: initialName, palette: initialPalette, threadcount: initialThreadcount, parentSlug }: Props) {
-  const [newName, setNewName] = useState('');
+function randomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randomHexColor(): string {
+  const r = randomInt(0, 255);
+  const g = randomInt(0, 255);
+  const b = randomInt(0, 255);
+  return '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('').toUpperCase();
+}
+
+function generateRandomTartan(colorPool?: string[]): { palette: string; threadcount: string } {
+  const numColors = randomInt(3, 7);
+  const availableLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+  // Pick unique single-letter codes
+  const codes: string[] = [];
+  const usedIndices = new Set<number>();
+  while (codes.length < numColors) {
+    const idx = randomInt(0, availableLetters.length - 1);
+    if (!usedIndices.has(idx)) {
+      usedIndices.add(idx);
+      codes.push(availableLetters[idx]);
+    }
+  }
+
+  // Generate palette entries
+  const paletteEntries = codes.map((code) => {
+    const hex = colorPool ? colorPool[randomInt(0, colorPool.length - 1)] : randomHexColor();
+    return `${code}${hex}`;
+  });
+  const paletteStr = paletteEntries.join(' ');
+
+  // Generate threadcount entries
+  const numEntries = randomInt(5, 15);
+  const tcEntries: string[] = [];
+  for (let i = 0; i < numEntries; i++) {
+    const code = codes[randomInt(0, codes.length - 1)];
+    const size = randomInt(2, 40);
+    tcEntries.push(`${code}${size}`);
+  }
+
+  // Make symmetric: add / pivot to first entry, ensure last uses same code as first
+  const firstCode = tcEntries[0].match(/^([A-Z]+)/)?.[1] || codes[0];
+  tcEntries[0] = tcEntries[0].replace(firstCode, firstCode + '/');
+
+  const lastSize = tcEntries[tcEntries.length - 1].match(/(\d+)$/)?.[1] || '10';
+  tcEntries[tcEntries.length - 1] = `${firstCode}/${lastSize}`;
+
+  const threadcountStr = tcEntries.join(' ');
+
+  return { palette: paletteStr, threadcount: threadcountStr };
+}
+
+export default function TartanCreator() {
+  const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [palette, setPalette] = useState(initialPalette);
-  const [threadcount, setThreadcount] = useState(initialThreadcount);
+  const [palette, setPalette] = useState('');
+  const [threadcount, setThreadcount] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [useOfficialColors, setUseOfficialColors] = useState(false);
+  const [colorPoolSize, setColorPoolSize] = useState(100);
+
+  const handleGenerate = useCallback(() => {
+    const pool = useOfficialColors ? officialColors.slice(0, colorPoolSize) : undefined;
+    const { palette: p, threadcount: tc } = generateRandomTartan(pool);
+    setPalette(p);
+    setThreadcount(tc);
+  }, [useOfficialColors, colorPoolSize]);
 
   const handleSave = useCallback(async () => {
-    if (!newName.trim()) {
+    if (!name.trim()) {
       setError('Please enter a name for your tartan.');
+      return;
+    }
+    if (!palette.trim() || !threadcount.trim()) {
+      setError('Please add a palette and threadcount, or generate a random tartan.');
       return;
     }
 
@@ -641,11 +698,11 @@ export default function TartanEditor({ name: initialName, palette: initialPalett
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: newName.trim(),
+          name: name.trim(),
           description,
           palette,
           threadcount,
-          parent_slug: parentSlug,
+          parent_slug: null,
         }),
       });
 
@@ -662,21 +719,51 @@ export default function TartanEditor({ name: initialName, palette: initialPalett
       setError('Network error. Please try again.');
       setSaving(false);
     }
-  }, [newName, description, palette, threadcount, parentSlug]);
+  }, [name, description, palette, threadcount]);
+
+  const hasPattern = palette.trim() !== '' && threadcount.trim() !== '';
 
   return (
     <div className="edit-container">
       <div className="edit-panel-frame">
         <div className="edit-panel">
-          <p className="parent-info">Editing based on: <strong>{initialName}</strong></p>
+          <button
+            type="button"
+            className="generate-btn"
+            onClick={handleGenerate}
+          >
+            Generate Random Tartan
+          </button>
+          <label className="generate-option">
+            <input
+              type="checkbox"
+              checked={useOfficialColors}
+              onChange={(e) => setUseOfficialColors(e.target.checked)}
+            />
+            Use official tartan colors
+          </label>
+          {useOfficialColors && (
+            <label className="generate-option">
+              <span>Pool:</span>
+              <select
+                value={colorPoolSize}
+                onChange={(e) => setColorPoolSize(Number(e.target.value))}
+              >
+                <option value={10}>Top 10</option>
+                <option value={25}>Top 25</option>
+                <option value={100}>Top 100</option>
+                <option value={500}>Top 500</option>
+                <option value={1000}>Top 1000</option>
+                <option value={officialColors.length}>All ({officialColors.length})</option>
+              </select>
+            </label>
+          )}
+          <TextToThreadcount palette={palette} setThreadcount={setThreadcount} />
 
           <label>Palette</label>
           <PaletteEditor palette={palette} setPalette={setPalette} />
 
-          <TextToThreadcount palette={palette} setThreadcount={setThreadcount} />
-
-          <label htmlFor="ed-threadcount">Threadcount</label>
-          <ThreadcountBar threadcount={threadcount} palette={palette} />
+          <label>Threadcount</label>
           <ThreadcountEditor
             threadcount={threadcount}
             setThreadcount={setThreadcount}
@@ -688,23 +775,30 @@ export default function TartanEditor({ name: initialName, palette: initialPalett
       </div>
       <div className="edit-preview">
         <div>
-          <TartanSvgPreview threadcount={threadcount} palette={palette} />
+          {hasPattern ? (
+            <>
+              <TartanSvgPreview threadcount={threadcount} palette={palette} />
+              <ThreadcountBar threadcount={threadcount} palette={palette} />
+            </>
+          ) : (
+            <div className="preview-placeholder" aria-hidden="true" />
+          )}
         </div>
       </div>
       <div className="edit-panel-frame">
         <div className="edit-panel">
-          <label htmlFor="ed-name">New Tartan Name</label>
+          <label htmlFor="cr-name">Tartan Name</label>
           <input
-            id="ed-name"
+            id="cr-name"
             type="text"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             placeholder="Enter a name for your tartan"
           />
 
-          <label htmlFor="ed-desc">Description</label>
+          <label htmlFor="cr-desc">Description</label>
           <textarea
-            id="ed-desc"
+            id="cr-desc"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Optional description"

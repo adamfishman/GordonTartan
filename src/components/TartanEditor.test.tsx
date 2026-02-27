@@ -191,7 +191,7 @@ describe('TartanEditor — handleSave', () => {
       expect(screen.queryByText('Saving...')).toBeTruthy()
     })
 
-    const btn = screen.getByRole('button') as HTMLButtonElement
+    const btn = screen.getByText('Saving...') as HTMLButtonElement
     expect(btn.disabled).toBe(true)
   })
 

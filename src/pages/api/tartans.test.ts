@@ -64,8 +64,9 @@ const createdTartan = {
   threadcount: 'R10 G10',
   description: '',
   parent_slug: null,
+  parent_id: null,
   is_official: false,
-  origin_url: '',
+  ref_id: null,
   created_at: '2024-01-01T00:00:00Z',
 }
 
@@ -157,10 +158,16 @@ describe('POST /api/tartans', () => {
 
   it('passes optional description and parent_slug to createTartan', async () => {
     const body = { ...validBody, description: 'A custom tartan', parent_slug: 'gordon' }
+    mockGetTartanBySlug.mockImplementation(async (slug: string) => {
+      if (slug === 'gordon') {
+        return { ...createdTartan, id: 42, slug: 'gordon', name: 'Gordon' } as any
+      }
+      return null
+    })
     await POST(ctx(makeRequest(body)))
     expect(mockCreateTartan).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ description: 'A custom tartan', parent_slug: 'gordon' }),
+      expect.objectContaining({ description: 'A custom tartan', parent_slug: 'gordon', parent_id: 42 }),
     )
   })
 
