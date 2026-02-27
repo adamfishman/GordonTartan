@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "astro dev",
+    "dev:wrangler": "wrangler dev",
     "build": "node scripts/build-search-index.js && astro build",
     "seed": "node scripts/seed-d1.js",
     "deploy": "npm run build && wrangler deploy",
@@ -17,6 +18,8 @@
     "@astrojs/react": "^4.2.0",
     "@fontsource/alfa-slab-one": "^5.0.0",
     "@fontsource/barlow": "^5.0.0",
+    "@fontsource/comfortaa": "^5.2.8",
+    "@fontsource/medievalsharp": "^5.2.8",
     "astro": "^5.2.0",
     "lunr": "^2.3.9",
     "react": "^19.0.0",
@@ -30,6 +33,6 @@
     "@types/react-dom": "^19.0.0",
     "happy-dom": "^20.7.0",
     "vitest": "^2.0.0",
-    "wrangler": "^3.0.0"
+    "wrangler": "^4.67.0"
   }
 }

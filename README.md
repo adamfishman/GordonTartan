@@ -33,6 +33,28 @@ This project is based on the original work of **[PeHaa](https://pehaa.com)** (Pa
 
 Tartan patterns are generated programmatically as SVG from palette and threadcount data stored in a Cloudflare D1 database, seeded from the original CSV supplied by the Scottish Register of Tartans.
 
+## Development / Fork setup
+
+If you work from a **fork** (e.g. you open PRs into another repo), point `origin` at **your fork** and add `upstream` for the repo you contribute to:
+
+```bash
+# See current remotes
+git remote -v
+
+# If origin points at the wrong repo, fix it:
+# 1. Rename current origin to upstream (the repo you're contributing to)
+git remote rename origin upstream
+
+# 2. Add your fork as origin (replace YOUR_USERNAME with your GitHub username)
+git remote add origin git@github.com:YOUR_USERNAME/GordonTartan.git
+
+# 3. Push branches and set upstream to your fork
+git push -u origin main
+git push -u origin <your-feature-branch>
+```
+
+Then use `git push origin <branch>` to push to your fork and open PRs from there.
+
 ## Getting Started
 
 ### Prerequisites

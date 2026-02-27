@@ -11,7 +11,7 @@ if (!tartan) {
   return Astro.redirect('/404');
 }
 ---
-<Layout title={`Edit: ${tartan.name}`} description={`Edit the ${tartan.name} tartan pattern.`}>
+<Layout title={`Edit: ${tartan.name}`} description={`Edit the ${tartan.name} tartan pattern.`} tartanThreadcount={tartan.threadcount} tartanPalette={tartan.palette}>
   <TartanEditor
     client:load
     name={tartan.name}

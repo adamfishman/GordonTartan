@@ -62,6 +62,18 @@ function parseCSV(content) {
   return records;
 }
 
+function parseRefId(originUrl) {
+  if (!originUrl) return null;
+  try {
+    const url = new URL(originUrl);
+    const ref = url.searchParams.get('ref');
+    const refId = ref ? Number.parseInt(ref, 10) : NaN;
+    return Number.isFinite(refId) ? refId : null;
+  } catch {
+    return null;
+  }
+}
+
 const csvPath = resolve(__dirname, '../src/data/tartans.csv');
 const csvContent = readFileSync(csvPath, 'utf-8');
 const records = parseCSV(csvContent);
@@ -100,10 +112,11 @@ for (const record of records) {
   const name = uniqueName.replace(/'/g, "''");
   const palette = record.Palette.replace(/'/g, "''");
   const threadcount = record.Threadcount.replace(/'/g, "''");
-  const originUrl = record.Origin_URL.replace(/'/g, "''");
+  const refId = parseRefId(record.Origin_URL);
+  const refValue = refId === null ? 'NULL' : Number(refId);
 
   allStatements.push(
-    `INSERT INTO tartans (name, palette, threadcount, slug, is_official, origin_url) VALUES ('${name}', '${palette}', '${threadcount}', '${slug}', 1, '${originUrl}');`
+    `INSERT INTO tartans (name, palette, threadcount, slug, is_official, ref_id) VALUES ('${name}', '${palette}', '${threadcount}', '${slug}', 1, ${refValue});`
   );
 }
 

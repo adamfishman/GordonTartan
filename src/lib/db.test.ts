@@ -48,8 +48,9 @@ const baseTartan = {
   threadcount: 'G/36 K2 W4 K2 G/36',
   slug: 'gordon',
   parent_slug: null,
+  parent_id: null,
   is_official: true,
-  origin_url: 'https://www.tartanregister.gov.uk/tartanDetails?ref=1',
+  ref_id: 1,
   created_at: '2024-01-01T00:00:00Z',
 }
 

@@ -1,13 +1,15 @@
 ---
 import Info from './Info.astro';
+import { buildOriginUrl } from '../lib/tartan';
 
 interface Props {
   previous: { slug: string; name: string } | null;
   next: { slug: string; name: string } | null;
-  originURL?: string;
+  refId?: number | null;
 }
 
-const { previous, next, originURL } = Astro.props;
+const { previous, next, refId } = Astro.props;
+const originURL = buildOriginUrl(refId);
 ---
 <nav class="nav">
   {previous && (

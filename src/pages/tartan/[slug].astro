@@ -2,9 +2,10 @@
 import Layout from '../../layouts/Layout.astro';
 import SvgBg from '../../components/SvgBg.astro';
 import TartanInfo from '../../components/TartanInfo.astro';
+import TartanTree from '../../components/TartanTree.astro';
 import SvgDownloadLink from '../../components/SvgDownloadLink.astro';
 import PngDownloadLink from '../../components/PngDownloadLink';
-import { getTartanBySlug, getAdjacentTartans } from '../../lib/db';
+import { getTartanBySlug, getAdjacentTartans, getFamilyTreeById } from '../../lib/db';
 import { buildSvgString } from '../../lib/tartan';
 
 const { slug } = Astro.params;
@@ -16,9 +17,20 @@ if (!tartan) {
 }
 
 const { previous, next } = await getAdjacentTartans(db, slug!);
+const family = await getFamilyTreeById(db, tartan.id);
 const { svg, size } = buildSvgString(tartan.threadcount, tartan.palette);
 const svgData = encodeURIComponent(svg);
 const description = `You can download here this beautiful seamless ${tartan.name} tartan pattern. It's available both as an SVG file or in a PNG format.`;
+
+const descendantMap = new Map<number, typeof family.descendants>();
+for (const node of family.descendants) {
+  if (node.parent_id === null) continue;
+  const existing = descendantMap.get(node.parent_id) || [];
+  existing.push(node);
+  descendantMap.set(node.parent_id, existing);
+}
+
+const rootDescendants = descendantMap.get(tartan.id) || [];
 ---
 <Layout title={tartan.name} description={description} tartanThreadcount={tartan.threadcount} tartanPalette={tartan.palette}>
   <SvgBg threadcount={tartan.threadcount} palette={tartan.palette} />
@@ -26,8 +38,28 @@ const description = `You can download here this beautiful seamless ${tartan.name
     name={tartan.name}
     previous={previous}
     next={next}
-    originURL={tartan.origin_url}
+    refId={tartan.ref_id}
   />
+  {(family.ancestors.length > 0 || family.descendants.length > 0) && (
+    <div class="tartan-lineage">
+      {family.ancestors.length > 0 && (
+        <div class="tartan-lineage-tree">
+          <span>Ancestors:</span>
+          <ul>
+            {family.ancestors.map((ancestor) => (
+              <li><a class="underlined-link" href={`/tartan/${ancestor.slug}`}>{ancestor.name}</a></li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {family.descendants.length > 0 && (
+        <div class="tartan-lineage-tree">
+          <span>Descendants:</span>
+          <TartanTree nodes={rootDescendants} descendantMap={descendantMap} />
+        </div>
+      )}
+    </div>
+  )}
   <div class="tartan-actions">
     <div class="edit-row">
       <a class="edit-link" href={`/tartan/${tartan.slug}/edit`}>Edit</a>

@@ -17,6 +17,11 @@ export function slugify(str: string): string {
     .replace(/-+$/, '');
 }
 
+export function buildOriginUrl(refId?: number | null): string | null {
+  if (!Number.isFinite(refId) || !refId) return null;
+  return `https://www.tartanregister.gov.uk/tartanDetails.aspx?ref=${refId}`;
+}
+
 export interface ThreadEntry {
   fill: string;
   size: number;
