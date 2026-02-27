@@ -569,6 +569,39 @@ footer {
   .index {
     grid-template-columns: 1fr;
   }
+  .sidebar {
+    top: auto;
+    left: 0;
+    width: 100%;
+    height: auto;
+    box-shadow: 0 -8px 16px 0 rgba(0, 0, 0, 0.5);
+  }
+  .sidebar > nav {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.25rem 0.5rem;
+    white-space: nowrap;
+  }
+  .az-list {
+    display: flex;
+    flex-direction: row;
+  }
+  .sidebar nav > a {
+    flex-shrink: 0;
+    margin-bottom: 0;
+    padding: 0.5rem 0.75rem;
+  }
+  .sidebar nav a {
+    padding: 0.5rem 0.4rem;
+  }
+  main {
+    width: 100%;
+    padding-bottom: 5rem;
+  }
 }
 @media screen and (max-width: 60em) {
   .hide-m {
