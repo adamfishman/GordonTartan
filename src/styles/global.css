@@ -580,8 +580,8 @@ footer {
     position: relative;
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
-    overflow-x: auto;
     overflow-y: hidden;
     padding: 0.25rem 0.5rem;
     white-space: nowrap;
@@ -589,6 +589,8 @@ footer {
   .az-list {
     display: flex;
     flex-direction: row;
+    flex-basis: 100%;
+    overflow-x: auto;
   }
   .sidebar nav > a {
     flex-shrink: 0;
@@ -600,7 +602,7 @@ footer {
   }
   main {
     width: 100%;
-    padding-bottom: 5rem;
+    padding-bottom: 6rem;
   }
 }
 @media screen and (max-width: 60em) {
