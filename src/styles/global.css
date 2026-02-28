@@ -604,6 +604,18 @@ footer {
     width: 100%;
     padding-bottom: 6rem;
   }
+  .edit-container {
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1rem;
+  }
+  .edit-container .edit-panel-frame {
+    width: 100%;
+    max-height: none;
+  }
+  .edit-preview {
+    flex: none;
+  }
 }
 @media screen and (max-width: 60em) {
   .hide-m {
