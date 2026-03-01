@@ -188,6 +188,7 @@ main {
   position: relative;
   width: calc(100% - 72px);
   min-height: calc(100vh - 1px);
+  min-height: 100svh;
   padding-bottom: 3rem;
 }
 
