@@ -158,7 +158,7 @@ describe('POST /api/tartans', () => {
 
   it('passes optional description and parent_slug to createTartan', async () => {
     const body = { ...validBody, description: 'A custom tartan', parent_slug: 'gordon' }
-    mockGetTartanBySlug.mockImplementation(async (slug: string) => {
+    mockGetTartanBySlug.mockImplementation(async (_db: any, slug: string) => {
       if (slug === 'gordon') {
         return { ...createdTartan, id: 42, slug: 'gordon', name: 'Gordon' } as any
       }
