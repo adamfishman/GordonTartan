@@ -8,7 +8,7 @@
     "dev:wrangler": "wrangler dev",
     "build": "node scripts/build-search-index.js && astro build",
     "seed": "node scripts/seed-d1.js",
-    "deploy": "npm run build && wrangler deploy",
+    "deploy": "npm run build && wrangler d1 migrations apply gordon-tartan-db --remote && wrangler deploy",
     "test": "vitest run",
     "test:watch": "vitest"
   },
