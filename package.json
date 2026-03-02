@@ -20,7 +20,7 @@
     "@fontsource/barlow": "^5.0.0",
     "@fontsource/comfortaa": "^5.2.8",
     "@fontsource/medievalsharp": "^5.2.8",
-    "astro": "^5.2.0",
+    "astro": "^5.18.0",
     "lunr": "^2.3.9",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
