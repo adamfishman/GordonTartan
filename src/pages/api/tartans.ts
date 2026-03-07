@@ -13,15 +13,20 @@ export const POST: APIRoute = async ({ request, locals }) => {
   }
 
   const { name, palette, threadcount, description, parent_slug } = body;
+  const normalizedName = name?.trim();
+  const normalizedPalette = palette?.trim();
+  const normalizedThreadcount = threadcount?.trim();
+  const normalizedParentSlug = parent_slug?.trim() || undefined;
 
-  if (!name || !palette || !threadcount) {
+  if (!normalizedName || !normalizedPalette || !normalizedThreadcount) {
     return new Response(JSON.stringify({ error: 'name, palette, and threadcount are required' }), { status: 400 });
   }
 
   // Validate threadcount/palette by running countPattern
   try {
-    const result = countPattern(threadcount, palette);
-    if (result.length === 0) {
+    const result = countPattern(normalizedThreadcount, normalizedPalette);
+    const hasPositiveSegment = result.some((entry) => Number.isFinite(entry.size) && entry.size > 0);
+    if (!hasPositiveSegment) {
       return new Response(JSON.stringify({ error: 'Invalid threadcount/palette combination' }), { status: 400 });
     }
   } catch {
@@ -29,7 +34,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
   }
 
   // Generate unique slug
-  let baseSlug = slugify(name);
+  const baseSlug = slugify(normalizedName);
+  if (!baseSlug) {
+    return new Response(JSON.stringify({ error: 'Invalid tartan name' }), { status: 400 });
+  }
   let slug = baseSlug;
   let suffix = 2;
 
@@ -39,8 +47,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
   }
 
   let parentId: number | null = null;
-  if (parent_slug) {
-    const parent = await getTartanBySlug(db, parent_slug);
+  if (normalizedParentSlug) {
+    const parent = await getTartanBySlug(db, normalizedParentSlug);
     if (!parent) {
       return new Response(JSON.stringify({ error: 'Parent tartan not found' }), { status: 400 });
     }
@@ -49,12 +57,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   try {
     const tartan = await createTartan(db, {
-      name,
+      name: normalizedName,
       description,
-      palette,
-      threadcount,
+      palette: normalizedPalette,
+      threadcount: normalizedThreadcount,
       slug,
-      parent_slug,
+      parent_slug: normalizedParentSlug,
       parent_id: parentId,
     });
 

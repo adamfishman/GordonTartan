@@ -123,12 +123,28 @@ describe('POST /api/tartans', () => {
     expect(body.error).toBe('Invalid threadcount/palette combination')
   })
 
+  it('returns 400 when countPattern returns only zero-sized segments', async () => {
+    mockCountPattern.mockReturnValue([{ fill: '#000000', size: 0 }])
+    const res = await POST(ctx(makeRequest(validBody)))
+    expect(res.status).toBe(400)
+    const body = await res.json() as any
+    expect(body.error).toBe('Invalid threadcount/palette combination')
+  })
+
   it('returns 400 when countPattern throws (malformed format)', async () => {
     mockCountPattern.mockImplementation(() => { throw new Error('bad format') })
     const res = await POST(ctx(makeRequest(validBody)))
     expect(res.status).toBe(400)
     const body = await res.json() as any
     expect(body.error).toBe('Invalid threadcount/palette format')
+  })
+
+  it('returns 400 when slugify produces an empty slug', async () => {
+    mockSlugify.mockReturnValue('')
+    const res = await POST(ctx(makeRequest(validBody)))
+    expect(res.status).toBe(400)
+    const body = await res.json() as any
+    expect(body.error).toBe('Invalid tartan name')
   })
 
   // -------------------------------------------------------------------------
