@@ -59,7 +59,7 @@ Then use `git push origin <branch>` to push to your fork and open PRs from there
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org) (v18+)
+- [Node.js](https://nodejs.org) 24 (pinned in `.nvmrc`; run `nvm use`)
 - A [Cloudflare account](https://cloudflare.com) with Wrangler authenticated (`npx wrangler login`)
 
 ### Install dependencies
