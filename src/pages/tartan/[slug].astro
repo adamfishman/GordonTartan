@@ -7,9 +7,10 @@ import SvgDownloadLink from '../../components/SvgDownloadLink.astro';
 import PngDownloadLink from '../../components/PngDownloadLink';
 import { getTartanBySlug, getAdjacentTartans, getFamilyTreeById } from '../../lib/db';
 import { buildSvgString } from '../../lib/tartan';
+import { env } from 'cloudflare:workers';
 
 const { slug } = Astro.params;
-const db = Astro.locals.runtime.env.DB;
+const db = env.DB;
 
 const tartan = await getTartanBySlug(db, slug!);
 if (!tartan) {

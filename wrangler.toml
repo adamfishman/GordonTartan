@@ -1,10 +1,9 @@
 name = "gordon-tartan"
-compatibility_date = "2026-03-01"
+compatibility_date = "2026-10-19"
 compatibility_flags = ["nodejs_compat"]
-main = "dist/_worker.js"
-
-[assets]
-directory = "dist/"
+# @astrojs/cloudflare v13+ builds through the Cloudflare Vite plugin; `main` names the
+# adapter's entrypoint and the static-assets binding is configured by the adapter.
+main = "@astrojs/cloudflare/entrypoints/server"
 
 [[d1_databases]]
 binding = "DB"

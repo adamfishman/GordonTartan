@@ -71,8 +71,12 @@ npm install
 ### Seed the local database
 
 ```bash
+npx wrangler d1 migrations apply gordon-tartan-db --local
 npm run seed
 ```
+
+`npm run seed` only touches the local D1 in `.wrangler/state`. `npm run seed:remote` loads the
+production database; there is no undo, so use it only on an empty database.
 
 ### Run the development server
 
@@ -80,10 +84,14 @@ npm run seed
 npm run dev
 ```
 
-### Run tests
+`astro dev` runs pages in `workerd` (the Workers runtime) with the local D1, so it matches
+production. To check a production build the same way: `npm run build && npm run preview`.
+
+### Run tests and type checks
 
 ```bash
 npm test
+npm run typecheck
 ```
 
 ### Build for production
