@@ -12,6 +12,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write   # post the coverage comment
 
     steps:
       - uses: actions/checkout@v7
@@ -27,8 +30,13 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
-      - name: Run tests
-        run: npm test
+      # Fails if coverage drops below the floors in vitest.config.ts
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Coverage report
+        if: always()
+        uses: davelosert/vitest-coverage-report-action@v2
 
       # Catches config and bundling breakage before Workers Builds deploys it.
       - name: Build

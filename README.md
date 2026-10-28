@@ -91,8 +91,14 @@ production. To check a production build the same way: `npm run build && npm run 
 
 ```bash
 npm test
+npm run test:coverage    # with v8 coverage and the floor check
 npm run typecheck
 ```
+
+`vitest.config.ts` sets coverage floors (`coverage.thresholds`) over the TypeScript/TSX code in
+`src/`. CI fails a PR that drops below any of them, and PRs get a coverage comment. Running
+`npm run test:coverage` locally raises the floors to the new whole-number coverage whenever it
+improves, and never lowers them; commit the updated config with your tests.
 
 ### Build for production
 
