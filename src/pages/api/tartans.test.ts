@@ -40,10 +40,9 @@ function makeInvalidJsonRequest(): Request {
   })
 }
 
-const fakeLocals = { runtime: { env: { DB: {} } } } as any
 
 function ctx(request: Request) {
-  return { request, locals: fakeLocals } as any
+  return { request } as any
 }
 
 // ---------------------------------------------------------------------------

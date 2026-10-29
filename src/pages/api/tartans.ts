@@ -1,9 +1,10 @@
 import type { APIRoute } from 'astro';
+import { env } from 'cloudflare:workers';
 import { countPattern, slugify } from '../../lib/tartan';
 import { createTartan, getTartanBySlug } from '../../lib/db';
 
-export const POST: APIRoute = async ({ request, locals }) => {
-  const db = locals.runtime.env.DB;
+export const POST: APIRoute = async ({ request }) => {
+  const db = env.DB;
 
   let body: { name?: string; palette?: string; threadcount?: string; description?: string; parent_slug?: string };
   try {

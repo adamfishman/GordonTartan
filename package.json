@@ -5,34 +5,44 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
-    "dev:wrangler": "wrangler dev",
     "build": "node scripts/build-search-index.js && astro build",
-    "seed": "node scripts/seed-d1.js",
-    "deploy": "npm run build && wrangler d1 migrations apply gordon-tartan-db --remote && wrangler deploy",
+    "preview": "astro preview",
+    "typecheck": "astro check",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest",
+    "seed": "node scripts/seed-d1.js --local",
+    "seed:remote": "node scripts/seed-d1.js",
+    "deploy": "npm run build && wrangler d1 migrations apply gordon-tartan-db --remote && wrangler deploy"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.6",
-    "@astrojs/cloudflare": "^12.2.0",
-    "@astrojs/react": "^4.2.0",
+    "@astrojs/check": "^0.9.12",
+    "@astrojs/cloudflare": "^14.4.2",
+    "@astrojs/react": "^7.1.1",
     "@fontsource/alfa-slab-one": "^5.0.0",
     "@fontsource/barlow": "^5.0.0",
     "@fontsource/comfortaa": "^5.2.8",
     "@fontsource/medievalsharp": "^5.2.8",
-    "astro": "^5.18.0",
+    "astro": "^7.4.2",
     "lunr": "^2.3.9",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261027.1",
     "@testing-library/react": "^16.3.2",
     "@types/lunr": "^2.3.7",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "happy-dom": "^20.7.0",
-    "vitest": "^4.0.18",
-    "wrangler": "^4.71.0"
+    "@vitest/coverage-v8": "^5.0.5",
+    "happy-dom": "^21.0.4",
+    "vitest": "^5.0.5",
+    "wrangler": "^4.154.0"
+  },
+  "overrides": {
+    "miniflare": {
+      "undici": "^7.30.1"
+    }
   }
 }

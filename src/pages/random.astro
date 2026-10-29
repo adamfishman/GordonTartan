@@ -1,7 +1,8 @@
 ---
 import { getRandomOfficialSlug } from '../lib/db';
+import { env } from 'cloudflare:workers';
 
-const db = Astro.locals.runtime.env.DB;
+const db = env.DB;
 const slug = await getRandomOfficialSlug(db);
 
 if (slug) {

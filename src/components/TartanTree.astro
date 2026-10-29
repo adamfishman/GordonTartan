@@ -1,4 +1,11 @@
 ---
+import type { TartanTreeNode } from '../lib/db';
+
+interface Props {
+  nodes: TartanTreeNode[];
+  descendantMap: Map<number, TartanTreeNode[]>;
+}
+
 const { nodes, descendantMap } = Astro.props;
 ---
 

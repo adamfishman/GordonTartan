@@ -1,8 +1,9 @@
 import type { APIRoute } from 'astro';
+import { env } from 'cloudflare:workers';
 import { getRandomOfficialSlug } from '../../lib/db';
 
-export const GET: APIRoute = async ({ locals }) => {
-  const db = locals.runtime.env.DB;
+export const GET: APIRoute = async () => {
+  const db = env.DB;
   const slug = await getRandomOfficialSlug(db);
 
   if (!slug) {

@@ -4,9 +4,10 @@ import SvgBg from '../../../components/SvgBg.astro';
 import PaletteEl from '../../../components/PaletteEl.astro';
 import TartansNavigation from '../../../components/TartansNavigation.astro';
 import { getTartansByLetter, getLetterPageCount } from '../../../lib/db';
+import { env } from 'cloudflare:workers';
 
 const { letter, page } = Astro.params;
-const db = Astro.locals.runtime.env.DB;
+const db = env.DB;
 
 const validLetter = letter?.toLowerCase();
 if (!validLetter || !/^[a-z]$/.test(validLetter)) {
