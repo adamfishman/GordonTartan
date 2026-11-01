@@ -165,8 +165,14 @@ describe('getRandomOfficialSlug', () => {
     expect(result).toBe('gordon')
   })
 
+  it('wraps around to the first official tartan when the random pick overshoots', async () => {
+    const db = makeDb([async () => null, async () => ({ slug: 'abercrombie' })])
+    const result = await getRandomOfficialSlug(db)
+    expect(result).toBe('abercrombie')
+  })
+
   it('returns null when there are no official tartans', async () => {
-    const db = makeDb([async () => null])
+    const db = makeDb([async () => null, async () => null])
     const result = await getRandomOfficialSlug(db)
     expect(result).toBeNull()
   })
