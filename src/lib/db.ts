@@ -50,6 +50,8 @@ export async function getTartansByLetter(
 ): Promise<TartanListResult> {
   const offset = (page - 1) * pageSize;
   const letterLower = letter.toLowerCase();
+  // The WHERE expressions here and in getLetterPageCount must stay textually
+  // identical to idx_name_letter (migration 0005) or SQLite falls back to a full scan.
 
   const countResult = await db
     .prepare("SELECT COUNT(*) as total FROM tartans WHERE LOWER(SUBSTR(name, 1, 1)) = ?")
@@ -133,11 +135,22 @@ export async function getFamilyTreeById(db: D1Database, tartanId: number): Promi
   };
 }
 
+// ORDER BY RANDOM() reads every row (~11k rows read on D1). Instead, pick a random
+// id and walk forward by primary key to the next official tartan, which reads a
+// handful of rows. The uncorrelated subquery keeps RANDOM() evaluated once. If the
+// pick lands past the last official row, wrap around to the first one.
 export async function getRandomOfficialSlug(db: D1Database): Promise<string | null> {
   const result = await db
-    .prepare("SELECT slug FROM tartans WHERE is_official = 1 ORDER BY RANDOM() LIMIT 1")
+    .prepare(
+      "SELECT slug FROM tartans WHERE is_official = 1 AND id >= (SELECT ABS(RANDOM()) % MAX(id) + 1 FROM tartans) ORDER BY id LIMIT 1"
+    )
     .first<{ slug: string }>();
-  return result?.slug || null;
+  if (result?.slug) return result.slug;
+
+  const fallback = await db
+    .prepare("SELECT slug FROM tartans WHERE is_official = 1 ORDER BY id LIMIT 1")
+    .first<{ slug: string }>();
+  return fallback?.slug || null;
 }
 
 export async function createTartan(
