@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef, type ChangeEvent } from 'react';
+import { saveTartan } from '../lib/saveTartan';
 import { officialColors } from '../data/official-colors';
 
 interface ThreadEntry {
@@ -694,16 +695,12 @@ export default function TartanCreator() {
     setError('');
 
     try {
-      const res = await fetch('/api/tartans', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          description,
-          palette,
-          threadcount,
-          parent_slug: null,
-        }),
+      const res = await saveTartan({
+        name: name.trim(),
+        description,
+        palette,
+        threadcount,
+        parent_slug: null,
       });
 
       if (!res.ok) {
