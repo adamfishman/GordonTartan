@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import {
   getTartanBySlug,
   getTartansByLetter,
@@ -6,7 +6,11 @@ import {
   getRandomOfficialSlug,
   createTartan,
   getLetterPageCount,
+  clearLetterCountCache,
 } from './db'
+
+// Letter counts are cached per isolate; start every test cold.
+beforeEach(() => clearLetterCountCache())
 
 // ---------------------------------------------------------------------------
 // Mock helper
@@ -184,11 +188,8 @@ describe('getRandomOfficialSlug', () => {
 describe('createTartan', () => {
   it('inserts a new tartan and returns the created record', async () => {
     const newTartan = { ...baseTartan, id: 99, name: 'My Custom', slug: 'my-custom', is_official: false }
-    // Two DB calls: run() for INSERT, then first() via getTartanBySlug
-    const db = makeDb([
-      async () => {},         // INSERT → run()
-      async () => newTartan,  // SELECT → first()
-    ])
+    // One DB call: INSERT ... RETURNING * → first()
+    const db = makeDb([async () => newTartan])
     const result = await createTartan(db, {
       name: 'My Custom',
       palette: baseTartan.palette,
@@ -201,10 +202,7 @@ describe('createTartan', () => {
 
   it('passes optional description and parent_slug to the database', async () => {
     const newTartan = { ...baseTartan, id: 100, slug: 'custom-child', parent_slug: 'gordon' }
-    const db = makeDb([
-      async () => {},
-      async () => newTartan,
-    ])
+    const db = makeDb([async () => newTartan])
     const result = await createTartan(db, {
       name: 'Custom Child',
       description: 'A variant',
@@ -249,5 +247,25 @@ describe('getLetterPageCount', () => {
     const db = makeDb([async () => null])
     const pages = await getLetterPageCount(db, 'Z')
     expect(pages).toBe(0)
+  })
+
+  it('caches the count so repeat calls for a letter skip the database', async () => {
+    let queries = 0
+    const db = makeDb([async () => { queries++; return { total: 125 } }])
+    expect(await getLetterPageCount(db, 'G')).toBe(3)
+    expect(await getLetterPageCount(db, 'g')).toBe(3)
+    expect(queries).toBe(1)
+  })
+
+  it('drops cached counts after a tartan is created', async () => {
+    const newTartan = { ...baseTartan, id: 101, slug: 'gordon-new' }
+    const db = makeDb([
+      async () => ({ total: 60 }),   // first count
+      async () => newTartan,         // INSERT ... RETURNING
+      async () => ({ total: 61 }),   // recount after cache cleared
+    ])
+    expect(await getLetterPageCount(db, 'G')).toBe(1)
+    await createTartan(db, { name: 'Gordon New', palette: 'p', threadcount: 't', slug: 'gordon-new' })
+    expect(await getLetterPageCount(db, 'G')).toBe(2)
   })
 })

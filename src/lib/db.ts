@@ -42,6 +42,31 @@ export async function getTartanBySlug(db: D1Database, slug: string): Promise<Tar
   return result || null;
 }
 
+// Letter totals only change when a tartan is created, but every letter page asks
+// for two of them (its own letter and the previous one). Keep them in memory for
+// the life of the Worker isolate, so a crawler sweeping the A-Z pages hits D1
+// once per letter instead of twice per page. createTartan clears the cache; other
+// isolates catch up within the TTL.
+const LETTER_COUNT_TTL_MS = 60 * 60 * 1000;
+const letterCountCache = new Map<string, { total: number; expires: number }>();
+
+export function clearLetterCountCache(): void {
+  letterCountCache.clear();
+}
+
+async function countTartansByLetter(db: D1Database, letterLower: string): Promise<number> {
+  const cached = letterCountCache.get(letterLower);
+  if (cached && cached.expires > Date.now()) return cached.total;
+
+  const countResult = await db
+    .prepare("SELECT COUNT(*) as total FROM tartans WHERE LOWER(SUBSTR(name, 1, 1)) = ?")
+    .bind(letterLower)
+    .first<{ total: number }>();
+  const total = countResult?.total ?? 0;
+  letterCountCache.set(letterLower, { total, expires: Date.now() + LETTER_COUNT_TTL_MS });
+  return total;
+}
+
 export async function getTartansByLetter(
   db: D1Database,
   letter: string,
@@ -50,15 +75,10 @@ export async function getTartansByLetter(
 ): Promise<TartanListResult> {
   const offset = (page - 1) * pageSize;
   const letterLower = letter.toLowerCase();
-  // The WHERE expressions here and in getLetterPageCount must stay textually
+  // The WHERE expressions here and in countTartansByLetter must stay textually
   // identical to idx_name_letter (migration 0005) or SQLite falls back to a full scan.
 
-  const countResult = await db
-    .prepare("SELECT COUNT(*) as total FROM tartans WHERE LOWER(SUBSTR(name, 1, 1)) = ?")
-    .bind(letterLower)
-    .first<{ total: number }>();
-
-  const total = countResult?.total ?? 0;
+  const total = await countTartansByLetter(db, letterLower);
 
   const tartans = await db
     .prepare("SELECT * FROM tartans WHERE LOWER(SUBSTR(name, 1, 1)) = ? ORDER BY slug ASC LIMIT ? OFFSET ?")
@@ -157,9 +177,9 @@ export async function createTartan(
   db: D1Database,
   data: { name: string; description?: string; palette: string; threadcount: string; slug: string; parent_slug?: string; parent_id?: number | null }
 ): Promise<Tartan> {
-  await db
+  const created = await db
     .prepare(
-      "INSERT INTO tartans (name, description, palette, threadcount, slug, parent_slug, parent_id, is_official) VALUES (?, ?, ?, ?, ?, ?, ?, 0)"
+      "INSERT INTO tartans (name, description, palette, threadcount, slug, parent_slug, parent_id, is_official) VALUES (?, ?, ?, ?, ?, ?, ?, 0) RETURNING *"
     )
     .bind(
       data.name,
@@ -170,19 +190,14 @@ export async function createTartan(
       data.parent_slug || null,
       data.parent_id ?? null
     )
-    .run();
+    .first<Tartan>();
 
-  const created = await getTartanBySlug(db, data.slug);
+  letterCountCache.clear();
   return created!;
 }
 
 export async function getLetterPageCount(db: D1Database, letter: string, pageSize: number = 60): Promise<number> {
-  const letterLower = letter.toLowerCase();
-  const countResult = await db
-    .prepare("SELECT COUNT(*) as total FROM tartans WHERE LOWER(SUBSTR(name, 1, 1)) = ?")
-    .bind(letterLower)
-    .first<{ total: number }>();
-  const total = countResult?.total ?? 0;
+  const total = await countTartansByLetter(db, letter.toLowerCase());
   return Math.ceil(total / pageSize);
 }
 

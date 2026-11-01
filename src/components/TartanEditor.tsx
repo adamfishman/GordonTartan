@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef, type ChangeEvent } from 'react';
+import { saveTartan } from '../lib/saveTartan';
 
 interface Props {
   name: string;
@@ -637,16 +638,12 @@ export default function TartanEditor({ name: initialName, palette: initialPalett
     setError('');
 
     try {
-      const res = await fetch('/api/tartans', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newName.trim(),
-          description,
-          palette,
-          threadcount,
-          parent_slug: parentSlug,
-        }),
+      const res = await saveTartan({
+        name: newName.trim(),
+        description,
+        palette,
+        threadcount,
+        parent_slug: parentSlug,
       });
 
       if (!res.ok) {
