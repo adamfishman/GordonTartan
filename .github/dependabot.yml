@@ -4,7 +4,47 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+    # The default cap is 5. Stale PRs that hit it blocked every new update.
+    open-pull-requests-limit: 10
+    groups:
+      # Astro and its integrations release in lockstep and need to move together.
+      astro:
+        patterns:
+          - "astro"
+          - "@astrojs/*"
+      cloudflare:
+        patterns:
+          - "@cloudflare/*"
+          - "wrangler"
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      test-tooling:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+          - "happy-dom"
+          - "@testing-library/*"
+      fontsource:
+        patterns:
+          - "@fontsource/*"
+    ignore:
+      # @astrojs/check (which `npm run typecheck` runs) has a peer range of
+      # typescript ^5 || ^6, so TypeScript 7 fails `npm ci` with ERESOLVE.
+      # Remove this entry once @astrojs/check accepts TypeScript 7.
+      - dependency-name: "typescript"
+        versions: [">=7.0.0"]
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+    groups:
+      actions:
+        patterns:
+          - "*"

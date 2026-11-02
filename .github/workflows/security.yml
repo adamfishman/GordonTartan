@@ -25,3 +25,55 @@ jobs:
       # Reads package-lock.json directly; fails on high or critical advisories
       # in production or dev dependencies.
       - run: npm audit --package-lock-only --audit-level=high
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GITLEAKS_VERSION: 8.28.0
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | tar xz -C "$RUNNER_TEMP" gitleaks
+      # Scans full history on push/schedule, only the PR's commits on pull_request.
+      # Add allowlists for false positives in a .gitleaks.toml at the repo root.
+      - name: Scan for secrets
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            LOG_OPTS="--log-opts=${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
+          fi
+          "$RUNNER_TEMP/gitleaks" git --redact --verbose --no-banner $LOG_OPTS .
+
+  # Unlike Brandmap and timebar (private), this repo is public, so code scanning
+  # is free: results upload to the Security tab. Pushes to main are scanned too,
+  # because the Security tab compares each PR against the main branch's results.
+  codeql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+      security-events: write   # upload results to the Security tab
+    steps:
+      - uses: actions/checkout@v7
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
+          build-mode: none
+          queries: security-extended
+      - uses: github/codeql-action/analyze@v4
+        with:
+          output: sarif-results
+      # The Security tab only reports alerts; failing here makes them block the PR.
+      - name: Fail on findings
+        run: |
+          jq -r '.runs[].results[] | "\(.level // "warning"): \(.ruleId) at \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine) - \(.message.text)"' sarif-results/*.sarif \
+            | tee findings.txt
+          if [ -s findings.txt ]; then
+            echo "::error::CodeQL found $(wc -l < findings.txt) issue(s); see the Security tab for details"
+            exit 1
+          fi
