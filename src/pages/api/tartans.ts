@@ -2,8 +2,16 @@ import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { countPattern, slugify } from '../../lib/tartan';
 import { createTartan, getTartanBySlug } from '../../lib/db';
+import { isAuthorized } from '../../lib/auth';
 
 export const POST: APIRoute = async ({ request }) => {
+  if (!isAuthorized(request, env.ADMIN_TOKEN)) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json', 'WWW-Authenticate': 'Bearer' },
+    });
+  }
+
   const db = env.DB;
 
   let body: { name?: string; palette?: string; threadcount?: string; description?: string; parent_slug?: string };

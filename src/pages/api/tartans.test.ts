@@ -14,6 +14,7 @@ vi.mock('../../lib/db', () => ({
 import { POST } from './tartans'
 import { slugify, countPattern } from '../../lib/tartan'
 import { getTartanBySlug, createTartan } from '../../lib/db'
+import { env } from 'cloudflare:workers'
 
 const mockSlugify = vi.mocked(slugify)
 const mockCountPattern = vi.mocked(countPattern)
@@ -24,10 +25,15 @@ const mockCreateTartan = vi.mocked(createTartan)
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeRequest(body: unknown): Request {
+const ADMIN_TOKEN = 'test-admin-token'
+
+function makeRequest(body: unknown, token: string | null = ADMIN_TOKEN): Request {
   return new Request('http://localhost/api/tartans', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify(body),
   })
 }
@@ -35,7 +41,7 @@ function makeRequest(body: unknown): Request {
 function makeInvalidJsonRequest(): Request {
   return new Request('http://localhost/api/tartans', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ADMIN_TOKEN}` },
     body: '{not valid json{{',
   })
 }
@@ -76,6 +82,7 @@ const createdTartan = {
 describe('POST /api/tartans', () => {
   beforeEach(() => {
     vi.resetAllMocks()
+    env.ADMIN_TOKEN = ADMIN_TOKEN
     // Default happy-path behaviour
     mockSlugify.mockReturnValue('my-tartan')
     mockCountPattern.mockReturnValue([{ fill: '#FF0000', size: 40 }])
@@ -86,6 +93,29 @@ describe('POST /api/tartans', () => {
   // -------------------------------------------------------------------------
   // Input validation
   // -------------------------------------------------------------------------
+
+  // -------------------------------------------------------------------------
+  // Authorization
+  // -------------------------------------------------------------------------
+
+  it('returns 401 without an Authorization header', async () => {
+    const res = await POST(ctx(makeRequest(validBody, null)))
+    expect(res.status).toBe(401)
+    expect(mockCreateTartan).not.toHaveBeenCalled()
+  })
+
+  it('returns 401 with the wrong token', async () => {
+    const res = await POST(ctx(makeRequest(validBody, 'nope')))
+    expect(res.status).toBe(401)
+    expect(mockCreateTartan).not.toHaveBeenCalled()
+  })
+
+  it('returns 401 for every request when ADMIN_TOKEN is not configured', async () => {
+    env.ADMIN_TOKEN = undefined
+    const res = await POST(ctx(makeRequest(validBody)))
+    expect(res.status).toBe(401)
+    expect(mockCreateTartan).not.toHaveBeenCalled()
+  })
 
   it('returns 400 for invalid JSON body', async () => {
     const res = await POST(ctx(makeInvalidJsonRequest()))

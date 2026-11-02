@@ -8,5 +8,7 @@ type D1Database = import('@cloudflare/workers-types').D1Database;
 declare module 'cloudflare:workers' {
   export const env: {
     DB: D1Database;
+    // Worker secret, not in wrangler.toml: `wrangler secret put ADMIN_TOKEN`.
+    ADMIN_TOKEN?: string;
   };
 }

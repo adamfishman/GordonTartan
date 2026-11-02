@@ -78,6 +78,18 @@ npm run seed
 `npm run seed` only touches the local D1 in `.wrangler/state`. `npm run seed:remote` loads the
 production database; there is no undo, so use it only on an empty database.
 
+### Admin token
+
+Saving a tartan (`POST /api/tartans`) requires an admin token. Without it set, every save
+is refused.
+
+```bash
+echo 'ADMIN_TOKEN="pick-a-long-random-string"' >> .dev.vars   # local
+npx wrangler secret put ADMIN_TOKEN                            # production
+```
+
+The create and edit pages ask for the token on first save and remember it in that browser.
+
 ### Run the development server
 
 ```bash

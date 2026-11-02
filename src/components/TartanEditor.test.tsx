@@ -48,11 +48,13 @@ describe('TartanEditor — handleSave', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn())
     vi.stubGlobal('location', { href: '' })
+    localStorage.setItem('gt-admin-token', 'test-token')
   })
 
   afterEach(() => {
     cleanup()
     vi.unstubAllGlobals()
+    localStorage.clear()
   })
 
   // -------------------------------------------------------------------------
@@ -95,6 +97,7 @@ describe('TartanEditor — handleSave', () => {
     expect(url).toBe('/api/tartans')
     expect(init?.method).toBe('POST')
     expect((init?.headers as Record<string, string>)['Content-Type']).toBe('application/json')
+    expect((init?.headers as Record<string, string>).Authorization).toBe('Bearer test-token')
 
     const body = JSON.parse(init?.body as string)
     expect(body.name).toBe('My Tartan')
