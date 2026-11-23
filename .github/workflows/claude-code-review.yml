@@ -1,0 +1,188 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    branches:
+      - main
+    # synchronize = every new push to the PR. Each push gets a fresh full review,
+    # unless the pre-check below shows the push is purely cosmetic.
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+# One review per PR at a time; a newer push supersedes a review still in progress.
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    # Dependabot PRs can't read Actions secrets, so the review would only fail.
+    # Drafts are skipped here to save a run; the prompt also tells Claude to stop on them.
+    if: github.event.pull_request.user.login != 'dependabot[bot]' && github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write   # inline review comments and the summary comment
+      issues: read
+      id-token: write        # claude-code-action exchanges an OIDC token for the Claude GitHub App token
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      # Runs only on new pushes. Gives Claude two inputs:
+      #  - push-diff.patch: what this push changed, so a purely cosmetic push can be
+      #    skipped (only when a full review already exists and the diff is small).
+      #  - existing-review-comments.jsonl: inline comments already posted, so the
+      #    same issue isn't posted again on the same line.
+      # Event values come in through env and are never interpolated into the script.
+      - name: Prepare push diff and existing review comments
+        id: precheck
+        if: github.event.action == 'synchronize'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.event.after }}
+        run: |
+          set -uo pipefail
+          push_diff=false
+
+          gh api "repos/$REPO/pulls/$PR_NUMBER/comments" --paginate \
+            | jq -c '.[] | select(.user.type == "Bot" and (.user.login == "claude[bot]" or .user.login == "github-actions[bot]") and .line != null) | {path, line, body}' \
+            > existing-review-comments.jsonl || : > existing-review-comments.jsonl
+          echo "Existing bot inline comments: $(wc -l < existing-review-comments.jsonl)"
+
+          reviewed=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" --paginate \
+            | jq -s '[.[][] | select(.user.type == "Bot" and (.body | contains("<!-- claude-review-summary -->")))] | length') || reviewed=0
+          case "$reviewed" in ''|*[!0-9]*) reviewed=0 ;; esac
+          echo "Earlier review summary comments: $reviewed"
+
+          if [ "$reviewed" -gt 0 ]; then
+            if git fetch --depth=1 origin "$BEFORE" "$AFTER" && git diff "$BEFORE" "$AFTER" > push-diff.patch; then
+              lines=$(wc -l < push-diff.patch)
+              echo "Push diff: $lines lines"
+              if [ "$lines" -le 400 ]; then
+                push_diff=true
+              fi
+            else
+              echo "Could not fetch or diff $BEFORE..$AFTER (force push?); doing a full review."
+            fi
+          fi
+
+          if [ "$push_diff" != true ]; then
+            rm -f push-diff.patch
+          fi
+          echo "push_diff=$push_diff" >> "$GITHUB_OUTPUT"
+
+      - name: Run Claude Code Review
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          plugin_marketplaces: https://github.com/anthropics/claude-plugins-official.git
+          plugins: code-review@claude-plugins-official
+          claude_args: >-
+            --allowedTools "Read,Write,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh search:*),mcp__github_inline_comment__create_inline_comment"
+          prompt: |
+            /code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}
+
+            These instructions override the plugin's own steps where they differ.
+
+            When to stop early:
+            - Stop only if the PR is closed, a draft, or an automated PR (e.g. Dependabot, Renovate).
+            - Do NOT stop because Claude has already commented on or reviewed this PR. Every
+              push gets a fresh, full review of the whole PR as it now stands. Ignore the
+              plugin's "Claude has already commented" check.
+
+            Push diff available: ${{ steps.precheck.outputs.push_diff == 'true' }}
+
+            If the push diff is available (true), read push-diff.patch in the working
+            directory FIRST. It is what this latest push changed. You may skip the review
+            only if every change in it is cosmetic: comments, whitespace or formatting,
+            typo fixes, wording of docs or Markdown, or an empty diff. Anything that can
+            change behavior is NOT cosmetic, however small: logic, conditions, values,
+            config, dependencies, SQL, tests, types, or user-facing strings in code. When
+            in doubt, do the full review. If the push diff is not available (false), never
+            skip.
+
+            To skip: run no agents and post nothing. Write the file review-skip.md in the
+            working directory containing exactly two lines: the line
+            <!-- skipped-superficial -->
+            and then one sentence saying what the push changed. Then stop.
+
+            Repeated inline comments: if existing-review-comments.jsonl exists in the working
+            directory, read it before posting. Each line is an inline comment already on the
+            PR (path, line, body). Do not post an issue again on a line that already has a
+            comment about that issue.
+
+            Summary comment: do not post the summary with `gh pr comment`. Instead, write it
+            to review-summary.md in the working directory; a later workflow step posts it as
+            one comment that is updated on each review. Always write it after a full review
+            (not after a skip): use the plugin's "## Code review" format, saying either
+            "No issues found. Checked for bugs and CLAUDE.md compliance." or listing each
+            issue briefly (the details are in the inline comments). Still post inline
+            comments for issues as the plugin describes.
+
+      # Posts or updates the single review summary comment (marked <!-- claude-review-summary -->).
+      # After a full review it replaces the comment with the new summary. After a cosmetic
+      # skip it keeps the last full review's text and adds or replaces a note under it,
+      # so a skip is never silent.
+      - name: Post review summary
+        if: steps.claude.outcome == 'success'
+        uses: actions/github-script@v8
+        env:
+          PUSH_DIFF: ${{ steps.precheck.outputs.push_diff }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        with:
+          script: |
+            const fs = require('fs');
+            const MARKER = '<!-- claude-review-summary -->';
+            const SKIP_MARKER = '<!-- skipped-superficial -->';
+            const NOTE_MARKER = '<!-- claude-review-skip-note -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const read = (f) => (fs.existsSync(f) ? fs.readFileSync(f, 'utf8').trim() : '');
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number, per_page: 100,
+            });
+            const existing = comments
+              .filter((c) => c.user?.type === 'Bot' && c.body?.includes(MARKER))
+              .pop();
+
+            const skip = read('review-skip.md');
+            const summary = read('review-summary.md');
+            let body;
+
+            if (skip.startsWith(SKIP_MARKER) && process.env.PUSH_DIFF === 'true') {
+              const what = skip.slice(SKIP_MARKER.length).trim() || 'Cosmetic changes only.';
+              const shortSha = process.env.HEAD_SHA.slice(0, 7);
+              const note = [
+                NOTE_MARKER,
+                '---',
+                `**Commit \`${shortSha}\` was not re-reviewed.** The push was judged purely cosmetic: ${what}`,
+                `The review above is from the last full review. [Workflow run](${runUrl})`,
+              ].join('\n');
+              const previous = existing ? existing.body.split(NOTE_MARKER)[0].trimEnd() : MARKER;
+              body = `${previous}\n\n${note}`;
+            } else if (summary) {
+              body = `${MARKER}\n${summary}`;
+            } else {
+              core.info('Claude wrote no summary or skip file (stopped early); leaving comments unchanged.');
+              return;
+            }
+
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+              core.info(`Updated summary comment ${existing.id}`);
+            } else {
+              const { data } = await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              core.info(`Created summary comment ${data.id}`);
+            }
