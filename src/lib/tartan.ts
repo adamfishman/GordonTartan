@@ -18,7 +18,7 @@ export function slugify(str: string): string {
 }
 
 export function buildOriginUrl(refId?: number | null): string | null {
-  if (!Number.isFinite(refId) || !refId) return null;
+  if (!Number.isFinite(refId) || !refId || refId < 0) return null;
   return `https://www.tartanregister.gov.uk/tartanDetails.aspx?ref=${refId}`;
 }
 
