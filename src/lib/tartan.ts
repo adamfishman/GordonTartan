@@ -214,7 +214,7 @@ export function svgToDataUri(svg: string): string {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-// Keeps a thread size within the given bounds.
+// Clamps a thread size so it stays within the given bounds.
 export function clampSize(size: number, min: number, max: number): number {
   return Math.max(max, Math.min(min, size));
 }
